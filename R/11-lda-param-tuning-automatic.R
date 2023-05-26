@@ -36,14 +36,20 @@ df_id_tokens_rm_stopword <- read_csv("data/df-id-tokens-rm-stopword.csv")
 
 # Determining the number of topics, K
 
+# 単語の出現頻度の算出
+df_rm_stopword_count <- df_id_tokens_rm_stopword %>% 
+  group_by(title, term) %>% 
+  summarise(count = n()) %>% 
+  ungroup()
+
 ## Create document term matrix
-dtm_rm_stopword <- cast_dtm(df_id_tokens_rm_stopword,
+dtm_rm_stopword <- cast_dtm(df_rm_stopword_count,
                             document = "title", 
                             term = "term", 
                             value = "count")
 
 ## Remove tokens data to release memory
-remove(df_id_tokens_rm_stopword)
+remove(df_id_tokens_rm_stopword, df_id_tokens_rm_stopword)
 
 ## Automatic determination of K by using ldatuning package
 tic()
