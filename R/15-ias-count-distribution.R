@@ -103,8 +103,8 @@ ias_count %>%
 ## Save the visualized result
 ggsave("fig/bargraph_top-occurred-ias.png",
        units = "mm", width = 174, height = 150)
-ggsave("submission/j-nat-conserv_1st/figs/Fig-05_top-occurred-ias.eps", 
-       units = "mm", width = 174, height = 150, device = cairo_ps)
+# ggsave("submission/j-nat-conserv_1st/figs/Fig-05_top-occurred-ias.eps", 
+#        units = "mm", width = 174, height = 150, device = cairo_ps)
 
 ## グループ別にプロット
 ias_count

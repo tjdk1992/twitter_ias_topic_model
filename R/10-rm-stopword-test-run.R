@@ -42,7 +42,7 @@ rm(df_id_tokens_rm_stopword, df_rm_stopword_count)
 
 # LDAモデルの推定
 # トピック数
-K <- 10
+K <- 20
 # 推定
 tic()
 set.seed(135)

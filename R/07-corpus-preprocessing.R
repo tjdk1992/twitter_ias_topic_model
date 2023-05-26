@@ -107,7 +107,7 @@ df_id_tokens %<>%
               group_by(term) %>% 
               summarise(n = n()) %>% 
               arrange(term) %>% 
-              head(288) %>% 
+              head(530) %>% 
               dplyr::select(term), 
             by = "term")
 

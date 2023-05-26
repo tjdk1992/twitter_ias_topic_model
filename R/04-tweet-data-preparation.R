@@ -61,7 +61,9 @@ tweet_df_binded %>%
   head(10) %>% 
   unlist(use.name = FALSE)
 ## Remove tweeted tweet
-tweet_df_binded %<>% filter(!(type == "retweeted"))
+tweet_df_binded %<>% 
+  mutate(type = replace_na(type, "original")) %>% 
+  filter(!(type == "retweeted"))
 
 # Merge the ias information
 ## Merge
@@ -82,8 +84,8 @@ tweet_df_binded <- tweet_df_binded %>%
 # Check validity of the searched query
 ## Check "外来", "移入", "帰化", "侵入"
 tweet_df_binded %>% 
-  filter(str_detect(text, pattern = "侵入"),
-         !(str_detect(text, pattern = "外来") |
+  filter(str_detect(text, pattern = "侵入")) %>% 
+  filter(!(str_detect(text, pattern = "外来") |
              str_detect(text, pattern = "移入") |
              str_detect(text, pattern = "帰化"))) %>% 
   sample_n(size = 1000) %>% 

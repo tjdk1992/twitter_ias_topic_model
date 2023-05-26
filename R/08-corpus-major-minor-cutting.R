@@ -44,14 +44,19 @@ arrange(filter(tokens_summary_check, freq > 5), desc(freq))
 
 # 出現頻度の低い単語を確認
 arrange(filter(tokens_summary_check, freq < 0.01), desc(freq))
-arrange(filter(tokens_summary_check, freq < 0.005), desc(freq)) # この辺かな
-arrange(filter(tokens_summary_check, freq < 0.003), desc(freq))
-arrange(filter(tokens_summary_check, freq < 0.002), desc(freq))
+arrange(filter(tokens_summary_check, freq < 0.05), desc(freq))
+arrange(filter(tokens_summary_check, freq < 0.001), desc(freq)) # この辺かな
+arrange(filter(tokens_summary_check, freq < 0.0005), desc(freq))
+arrange(filter(tokens_summary_check, freq < 0.0006), desc(freq))
+arrange(filter(tokens_summary_check, freq < 0.0007), desc(freq))
+arrange(filter(tokens_summary_check, freq < 0.0008), desc(freq))
+arrange(filter(tokens_summary_check, freq < 0.0009), desc(freq))
+
 
 # 出現頻度の低い単語を除外する（n < 5）。
 df_id_tokens %<>% 
   anti_join(tokens_summary_check %>% 
-              filter(freq > 20 | freq < 0.005) %>% 
+              filter(freq > 20 | freq < 0.001) %>% 
               dplyr::select(term), 
             by = "term")
 
