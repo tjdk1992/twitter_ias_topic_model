@@ -52,3 +52,8 @@ rsconnect/
 twitter_ias_topic_model.Rproj
 
 # My Directories
+data/
+data-raw/
+product/
+resource/
+submission/
