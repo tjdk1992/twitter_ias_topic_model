@@ -1,18 +1,18 @@
-# R script for the analysis in:
-# Tomojiri, D., Takaya, K. (2022) Quantitative assessment of relative topics
-# and occurrence of invasive alien species in the Twitter.
-# Submitted to "Conservation Biology"
-#
-# R Script 10: Manually determining the number of topics
-#
-# Author: Daiki Tomojiri
-#
-# Outline:Ô
-## Step 1. Estimate the maximum number of tweeets / year
+#-----------------------------------------------------------------------------#
+# Script Name: 02-tweet-retrieval.R
+# Author: Daiki Tomojiri                                                      #
+# Email: tomojiri.daiki@gmail.com                                             #
+#                                                                             #
+# This R script screening and cleanse tweet                                   #
+#                                                                             #
+#-----------------------------------------------------------------------------#
 
-###############################################################################
 
-# Setup
+# Setup -----------------------------------------------------------------------
+
+# Initialization
+rm(list = ls())
+gc(); gc();
 
 ## Packages
 library(tidyverse) # for data manipulation

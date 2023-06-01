@@ -1,21 +1,18 @@
-# R code for the analysis in:
-# Tomojiri, D., Takaya, K. (2022) Quantitative assessment of relative topics
-# and occurrence of invasive alien species in the Twitter.
-# Submitted to "Conservation Biology"
-#
-# R Script 07: Examining combination of stopwords
-#
-# Author: Daiki Tomojiri
-#
-# Outline:
-## Step 1. 検索ワードと外来種名を除外する
-## Step 2. 公開されているストップワードを除外する。
-## Step 3. 名詞のストップワードを人力で選択して除外する。
-## Step 4. general tweetを集計してgeneralな動詞・形容詞を自動選別して除外する。
+#-----------------------------------------------------------------------------#
+# Script Name: 02-tweet-retrieval.R
+# Author: Daiki Tomojiri                                                      #
+# Email: tomojiri.daiki@gmail.com                                             #
+#                                                                             #
+# This R script screening and cleanse tweet                                   #
+#                                                                             #
+#-----------------------------------------------------------------------------#
 
-#------------------------------------------------------------------------------
 
-# Setup
+# Setup -----------------------------------------------------------------------
+
+# Initialization
+rm(list = ls())
+gc(); gc();
 
 ## Packages
 library(tidyverse) # for data manipulation

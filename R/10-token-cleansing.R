@@ -1,18 +1,20 @@
-# R script for the analysis in:
-# Tomojiri, D., Takaya, K. (2022) Quantitative assessment of relative topics
-# and occurrence of invasive alien species in the Twitter.
-# Submitted to "Conservation Biology"
-#
-# R Script 06: Preprocessing tokens for LDA inference
-#
-# Author: Daiki Tomojiri
-#
-# Outline:
-## Step 1. Estimate the maximum number of tweeets / year
+#-----------------------------------------------------------------------------#
+# Script Name: 02-tweet-retrieval.R
+# Author: Daiki Tomojiri                                                      #
+# Email: tomojiri.daiki@gmail.com                                             #
+#                                                                             #
+# This R script screening and cleanse tweet                                   #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
 
 # Setup -----------------------------------------------------------------------
 
-## Packages
+# Initialization
+rm(list = ls())
+gc(); gc();
+
+# Packages
 library(tidyverse) # for data manipulation
 library(readxl) # to read excel sheet
 library(lubridate) # to address date data
@@ -24,7 +26,7 @@ library(RMeCab) # to preprocess Japanese text data
 library(purrr) 
 library(hrbrthemes)
 
-## データの読み込み
+# Data
 df_id_tokens <- read_csv("data/df-id-tokens-original.csv")
 
 # Automatic cleaning ----------------------------------------------------------

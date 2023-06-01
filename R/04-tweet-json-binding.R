@@ -1,23 +1,25 @@
-# R script for the analysis in:
-# Tomojiri, D., Takaya, K. (2022) Quantitative assessment of relative topics
-# and occurrence of invasive alien species in the Twitter.
-# Submitted to "Conservation Biology"
-#
-# R Script 02: Preparing formatted data frame of tweets for analysis
-#
-# Author: Daiki Tomojiri
-#
-# Outline:
-## Step 1. Select variables for analysis
+#-----------------------------------------------------------------------------#
+# Script Name: 03-tweet-retrieval.R
+# Author: Daiki Tomojiri                                                      #
+# Email: tomojiri.daiki@gmail.com                                             #
+#                                                                             #
+# This R script screening and cleanse tweet                                   #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
 
 # Setup -----------------------------------------------------------------------
 
+# Initialization
+rm(list = ls())
+gc(); gc();
+
 # Packages
-library(readxl)
-library(tidyverse)
-library(lubridate)
-library(academictwitteR)
-library(stringi)
+pacman::p_load(tidyverse,
+               readxl,
+               lubridate,
+               academictwitteR,
+               stringi)
 
 # Bind JSON into tidy tibble --------------------------------------------------
 
@@ -107,8 +109,5 @@ for (i in 1:length(dataframe_paths)) {
   }
 }
 
-# Result
-tweet_df_binded
-
 # Write data
-write_csv(tweet_df_binded, "data/tweet-binded-df.csv")
+write_csv(tweet_df_binded, "data/tweet_01-binded.csv")

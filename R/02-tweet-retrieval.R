@@ -1,22 +1,24 @@
-# R script for the analysis in:
-# Tomojiri, D., Takaya, K. (2022) Quantitative assessment of relative topics
-# and occurrence of invasive alien species in the Twitter.
-# Submitted to "Conservation Biology"
-#
-# R Script 01: Retrieving tweets related to invasive alien species
-#
-# Author: Daiki Tomojiri
-#
-# Outline of the script:
-## Step 1. Estimate the maximum number of tweeets / year
-## Step 2. Retrieve all tweets from 2008-01-01 to 2022-12-31
+#-----------------------------------------------------------------------------#
+# Script Name: 02-tweet-retrieval.R
+# Author: Daiki Tomojiri                                                      #
+# Email: tomojiri.daiki@gmail.com                                             #
+#                                                                             #
+# This R script screening and cleanse tweet                                   #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
 
 # Setup -----------------------------------------------------------------------
 
-# Load packages
-library(tidyverse)           # for data manipulation
-library(lubridate)           # to convert time series data into date data
-library(academictwitteR)     # for collection of tweet data
+# Initialization
+rm(list = ls())
+gc(); gc();
+
+# Package
+pacman::p_load(tidyverse,      # for data manipulation
+               lubridate,      # for handling date class
+               academictwitteR # for handling twitter
+)
 
 # Data
 dat_ias_ja <- read_csv("data/ias-basic-info.csv") # 探索する外来生物のリスト
