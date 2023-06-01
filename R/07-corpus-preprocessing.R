@@ -42,7 +42,8 @@ df_id_tokens %<>%
     term = str_replace_all(term, "[[:number:]]", ""), # 半角数字の除去
     term = str_replace_all(term, "[[:lower:]]", ""), # 半角英語（小文字）
     term = str_replace_all(term, "[[:upper:]]", ""), # 半角英語（大文字） 
-    term = str_replace_all(term, "\\^", ""), # 顔文字の目
+    term = str_replace_all(term, "\\^", ""), # 顔文字の目"https?://.*[a-zA-Z0-9]"
+    term = str_replace_all(term, "https?://.*[a-zA-Z0-9]", ""), # URL
     term = stri_replace_all(term, regex = "\\p{Emoji}", ""), # 絵文字
     term = str_replace_all(term, "~", ""),
     # 日本語を扱うので全角になるものは戻しておく

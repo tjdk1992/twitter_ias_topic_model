@@ -62,7 +62,7 @@ ias_count %>%
 ## Kruskal-Wallis one-way analysis of variance test
 
 ### pattern 1.脊椎動物 vs 無脊椎動物 vs 植物
-kruskal.test(count ~ category, data = ias_count) # 有意ではない
+kruskal.test(count ~ category, data = ias_count) # ぎりぎり有意
 ### pattern 2.生物グループ間
 kruskal.test(count ~ group_biol, data = ias_count) # 有意
 ### pattern 3.法的指定
@@ -75,9 +75,15 @@ kruskal.test(count ~ group_biol, data = ias_count_vertebrate) # 有意
 
 # 多重比較
 
-## wilcox's multiple pairwise test
-## Dunnett's multiple pairwise test
 ## Pattern 1は有意ではなかったので多重比較からは除外
+## wilcox's multiple pairwise test
+pwc_dunn_group <- ias_count %>% 
+  dunn_test(count ~ category, p.adjust.method = "bonferroni") 
+pwc_dunn_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
+## Dunnett's multiple pairwise test
+pwc_wilcox_group <- ias_count %>% 
+  wilcox_test(count ~ category, p.adjust.method = "bonferroni") 
+pwc_wilcox_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
 
 ## pattern 2.生物グループ間
 ### Dunnett's test

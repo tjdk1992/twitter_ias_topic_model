@@ -88,7 +88,7 @@ ldatuning_result %>%
   geom_line(aes(linetype = metrics)) +
   annotate("rect", 
            xmin = 25, xmax = 150, 
-           ymin = -3, ymax = 3,
+           ymin = -3, ymax = 4,
            alpha = 0.2, fill = "grey") +
   scale_x_continuous(breaks = seq(0, 300, 10)) +
   facet_grid(group ~ .) +
