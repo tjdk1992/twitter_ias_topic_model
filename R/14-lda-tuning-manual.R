@@ -1,12 +1,12 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 14-lda-test-run.R                                              #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script explores optimal number of topics by checking multiple        #
+# patterns of combination of the topic number K and random seeds.             #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 

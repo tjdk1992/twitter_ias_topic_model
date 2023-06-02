@@ -1,12 +1,12 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 21-lda-topic-trend.R                                           #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script analyzes topic distribution over taxonomic groups and         #
+# predictability of the IAS occurrence by the topic distribution              #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 

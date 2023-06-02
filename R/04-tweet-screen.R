@@ -1,12 +1,11 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 04-tweet-screen.R                                              #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script screens tweets for LDA by their attributes and cleanse tweet. #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 

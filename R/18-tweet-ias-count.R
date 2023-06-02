@@ -1,12 +1,11 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 18-tweet-ias-count.R                                           #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script calculates the occurrence of each IAS in the tweets.          #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 

@@ -1,12 +1,11 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 09-stpw-rm-basic.R                                             #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script removes basic stop words prepared on the Internet in advance. #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 

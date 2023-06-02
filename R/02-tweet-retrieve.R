@@ -1,12 +1,11 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 02-tweet-retrieve                                              #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script retrieve tweet data via twitter academic API.                 #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 
@@ -18,10 +17,10 @@ gc(); gc();
 pacman::p_load(tidyverse,      # for data manipulation
                lubridate,      # for handling date class
                academictwitteR # for handling twitter
-)
+               )
 
 # Data
-dat_ias_ja <- read_csv("data/ias-basic-info.csv") # 探索する外来生物のリスト
+dat_ias_ja <- read_csv("data/basic-ias-info.csv") # 探索する外来生物のリスト
 
 # Retrieve tweets -------------------------------------------------------------
 
@@ -32,24 +31,25 @@ str(dat_ias_ja) # KATAKANAが検索対象のTermである。
 bearer_token <- "<ADD MY BEARER TOKEN>" # This is a secret sequence.
 
 # Prepare search query
+ias_ja <- dat_ias_ja$KATAKANA
 query_common <- "(移入 OR 帰化 OR 外来 OR 侵入)"
-
+list_ias_tweet <- list()
 for (i in 1:length(ias_ja)) {
   ias_all_ja <- unlist(dat_ias_ja$KATAKANA, use.name = FALSE)
   ias_all_code <- unlist(dat_ias_ja$code_ias, use.name = FALSE)
-  
   name_ias <- ias_all_ja[i]
   code_ias <- ias_all_code[i]
   t_query <- str_c(query_common, " ", name_ias)
   t_path <- str_c("data-raw/doc-tweet-ias/doc-tweet-", code_ias)
-  tweets_ias <- 
+  tweet_ias <- 
     get_all_tweets(query = t_query,
                    start_tweets = "2008-01-01T00:00:00Z",
                    end_tweets = "2023-05-01T00:00:00Z",
                    bearer_token = bearer_token,
                    data_path = t_path,
-                   bind_tweets = FALSE,
-                   n = 10000000) # 本番は10,000,000
+                   bind_tweets = TRUE,
+                   n = 1000000) # 本番は10,000,000
+  list_ias_tweet[[i]] <- tweet_ias
 }
 
 # Check the last 5 IAS in the looped query

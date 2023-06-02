@@ -1,10 +1,10 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 12-lda-test-run.R                                              #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script is for test run checking validity of the original stop words. #
 #-----------------------------------------------------------------------------#
 
 

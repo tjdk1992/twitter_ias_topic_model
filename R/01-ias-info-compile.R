@@ -1,12 +1,11 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 01-ias-info-compilation
+# Script Name: 01-ias-info-compilation                                        #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script prepare the data frame containing IAS information             #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 

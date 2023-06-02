@@ -1,12 +1,11 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R
+# Script Name: 19-lda-topic-trend.R                                           #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script screening and cleanse tweet                                   #
-#                                                                             #
+# This R script analyzes IAS occurrence trends over time.                     #
 #-----------------------------------------------------------------------------#
-
 
 # Setup -----------------------------------------------------------------------
 
@@ -27,7 +26,7 @@ library(rstatix)
 pal_orig <- c(rep(pals::cols25(25), 2))
 
 ## Data
-tweet_tidy <- read_csv("data/basic-ias-tweet.csv")
+tweet_ias_counting <- read_csv("data/basic-ias-tweet.csv")
 ias_count <- read_csv("data/basic-ias-count.csv")
 
 #------------------------------------------------------------------------------
