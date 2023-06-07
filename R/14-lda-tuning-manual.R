@@ -14,7 +14,8 @@
 rm(list = ls())
 gc(); gc();
 
-## Packages
+# Package
+pacman::p_load(tidyverse)
 library(tidyverse) # for data manipulation
 library(tidytext) # to use cast_dtm function
 library(textmineR) # to create DTM
@@ -29,14 +30,14 @@ library(topicmodels)
 pal_orig <- c(rep(pals::cols25(25), 2))
 
 ## Data
-df_id_tokens_rm_stopword <- read_csv("data/df-id-tokens-rm-stopword.csv")
+tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
 
 #------------------------------------------------------------------------------
 
 # Determining the number of topics, K
 
 ## Create document term matrix
-dtm_rm_stopword <- cast_dtm(df_id_tokens_rm_stopword,
+dtm_rm_stopword <- cast_dtm(tokens_rm_stpw_original,
                             document = "title", 
                             term = "term", 
                             value = "count")

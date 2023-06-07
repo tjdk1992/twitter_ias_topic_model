@@ -7,155 +7,155 @@
 # This R script is for test run checking validity of the original stop words. #
 #-----------------------------------------------------------------------------#
 
-
 # Setup -----------------------------------------------------------------------
 
 # Initialization
 rm(list = ls())
 gc(); gc();
 
-# Packages
-library(tidytext)
-library(topicmodels)
+# Package
+pacman::p_load(tidyverse,
+               magrittr,
+               readxl,
+               tidytext,
+               topicmodels)
 
 # Data
-df_id_tokens_rm_stopword <- read_csv("data/df-id-tokens-rm-stopword.csv")
+tokens_rm_stpw_basic <- read_csv("data/tokens-04_rm-stpw-basic.csv")
+tokens_rm_stpw_general <- read_csv("data/tokens-05_rm-stpw-general.csv")
+tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
 
-#       -----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-## original stopwordの除外をしないパターン
+# DTMの作成
+dtm_rm_stpw_basic <- makeDTMatrix(tokens_rm_stpw_basic)
+dtm_rm_stpw_general <- makeDTMatrix(tokens_rm_stpw_general)
+dtm_rm_stpw_original <- makeDTMatrix(tokens_rm_stpw_original)
 
-# 単語の出現頻度の算出
-df_rm_stopword_count <- df_id_tokens_rm_stopword %>% 
-  group_by(title, term) %>% 
-  summarise(count = n()) %>% 
-  ungroup()
+#------------------------------------------------------------------------------
 
-# DTM (document-term matrix)の作成
-dtm_stopword_not_rm <- cast_dtm(df_rm_stopword_count,
-                                document = "title", 
-                                term = "term", 
-                                value = "count")
+# 2023-05-29
+runLDAtest(dtm_rm_stpw_basic, file_name = "TP-list-rm-stpw-basic")
+runLDAtest(dtm_rm_stpw_general, file_name = "TP-list-rm-stpw-general")
+runLDAtest(dtm_rm_stpw_original, file_name = "TP-list-rm-stpw-original")
 
-# メモリ消費しないようにdtm用のdfは消しておく
-rm(df_id_tokens_rm_stopword, df_rm_stopword_count)
+# Trial and error of original stop words---------------------------------------
+# K = 30でチェックしてみる。
 
-# LDAモデルの推定
-# トピック数
-K <- 20
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_stopword_not_rm, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
+token_rm_stpw_original <- read_csv("data/tokens-05_rm-stpw-general.csv")
+stopword_noun_original <- 
+  read_excel("data-manual/token-rm-stpw-checked.xlsx", sheet = 1)
+stopword_noun_original %<>% filter(!(is.na(judge)))
+stopword_noun_original %>% 
+  group_by(judge, sub) %>% 
+  summarise(n = n()) %>% 
+  as.data.frame()
 
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-View(topicList_stopword_not_rm)
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_stopword_not_rm.csv")
+## Pattern I:
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-###############################################################################
-# 2023-01-17 (TUE)
-###############################################################################
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-I")
 
-## original stopwordの除外を除外（freq_doc > 0.1）
+## Pattern II: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-# LDAモデルの推定
-# トピック数
-K <- 20
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_rm_stopword, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-II")
 
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_r135_rm_noun-verb005-adj005_K20.csv")
+## Pattern III: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-###############################################################################
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-III")
 
-K <- 30
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_rm_stopword, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
+## Pattern IV: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       sub == "top") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_r135_rm_noun-verb005-adj005_K30.csv")
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-IV")
 
-###############################################################################
+## Pattern V: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-K <- 40
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_rm_stopword, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-V")
 
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_r135_rm_noun-verb005-adj005_K40.csv")
+## Pattern VI: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       sub == "top" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-###############################################################################
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VI")
 
-K <- 50
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_rm_stopword, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
+## Pattern VII: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
 
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_r135_rm_noun-verb005-adj005_K50.csv")
-
-###############################################################################
-# 2023-01-18 (WED)
-###############################################################################
-
-## original stopwordの除外を除外（freq_doc > 0.1）
-
-# LDAモデルの推定
-# トピック数
-K <- 20
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_rm_stopword, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
-
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_r135_rm_noun-verb005-adj005-additional_K20.csv")
-
-###############################################################################
-
-K <- 30
-# 推定
-tic()
-set.seed(135)
-topicModel <- LDA(dtm_rm_stopword, K, method = "Gibbs", 
-                  control = list(alpha = 1, iter = 1000, verbose = 25))
-toc()
-
-# 各トピックを構成する単語のリスト
-topicList_stopword_not_rm <- as.data.frame(terms(topicModel, 20))
-topicList_stopword_not_rm %>% 
-  write_csv("data/lda-test-run/topiclist_r135_rm_noun-verb005-adj005-additional_K30.csv")
-
-###############################################################################
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VII")

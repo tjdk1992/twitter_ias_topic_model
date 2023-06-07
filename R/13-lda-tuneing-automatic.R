@@ -13,95 +13,71 @@
 rm(list = ls())
 gc(); gc();
 
-## Packages
-library(tidyverse) # for data manipulation
-library(tidytext) # to use cast_dtm function
-library(textmineR) # to create DTM
-library(ldatuning) # determine the proper number of topics inferred
-library(tictoc) # to calculate ran time
-library(hrbrthemes) # for visualization
-library(doParallel)
-library(scales)
-library(topicmodels)
-library(pals)
+# Package
+pacman::p_load(tidyverse,
+               magrittr,
+               tidytext,
+               topicmodels,
+               ldatuning,
+               pals,
+               hrbrthemes,
+               tictoc)
 
-## Color palette
-pal_orig <- c(rep(pals::cols25(25), 2))
-
-## Data
-df_id_tokens_rm_stopword <- read_csv("data/df-id-tokens-rm-stopword.csv")
+# Data
+tokens_rm_stpw_basic <- read_csv("data/tokens-04_rm-stpw-basic.csv")
+tokens_rm_stpw_general <- read_csv("data/tokens-05_rm-stpw-general.csv")
+tokens_rm_stpw_original <- read_csv("data/tokens_06-rm-stpw-original.csv")
 
 #------------------------------------------------------------------------------
 
-# Determining the number of topics, K
+# DTMの作成
+dtm_rm_stpw_basic <- makeDTMatrix(tokens_rm_stpw_basic)
+dtm_rm_stpw_general <- makeDTMatrix(tokens_rm_stpw_general)
+dtm_rm_stpw_original <- makeDTMatrix(tokens_rm_stpw_original)
 
-# 単語の出現頻度の算出
-df_rm_stopword_count <- df_id_tokens_rm_stopword %>% 
-  group_by(title, term) %>% 
-  summarise(count = n()) %>% 
-  ungroup()
+# リストにまとめる
+list_dtm <- list(dtm_rm_stpw_basic,
+                 dtm_rm_stpw_general)
+                 #dtm_rm_stpw_original)
 
-## Create document term matrix
-dtm_rm_stopword <- cast_dtm(df_rm_stopword_count,
-                            document = "title", 
-                            term = "term", 
-                            value = "count")
+# ldatuning -------------------------------------------------------------------
 
-## Remove tokens data to release memory
-remove(df_id_tokens_rm_stopword, df_id_tokens_rm_stopword)
+list_res_ldatuning <- list()
+for (i in 1:2) {
+  dtm <- list_dtm[[i]]
+  list_res_ldatuning[[i]] <- FindTopicsNumber(
+    dtm,
+    topics = c(1:10 * 5, 6:11 * 10,  110, 120, 130, 140, 150, 0:3 * 50 + 150),
+    metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
+    method = "Gibbs",
+    control = list(seed = 123),
+    mc.cores = NA,
+    verbose = TRUE
+  )
+}
 
-## Automatic determination of K by using ldatuning package
-tic()
-ldatuning_result <- FindTopicsNumber(
-  dtm_rm_stopword,
-  topics = c(1:10 * 5, 110, 120, 130, 140, 150, 0:3 * 50 + 150),
-  metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
-  method = "Gibbs",
-  control = list(seed = 123),
-  mc.cores = NA,
-  verbose = TRUE
-)
-toc()
+# Resultの書き出し
+write_csv(as.data.frame(list_res_ldatuning[1]),
+          "data-manual/ldatuning-rm-stpw-basic.csv")
+write_csv(as.data.frame(list_res_ldatuning[2]),
+          "data-manual/ldatuning-rm-stpw-general.csv")
+write_csv(as.data.frame(list_res_ldatuning[3]),
+          "data-manual/ldatuning-rm-stpw-original.csv")
 
-## Resultの書き出し
-ldatuning_result %>% 
-  as.data.frame %>% 
-  write_csv("data/result-ldatuning.csv")
+# Visualize the results -------------------------------------------------------
 
-#------------------------------------------------------------------------------
+# Read the results 
+res_ldatuning_basic <- read_csv("data-manual/ldatuning-rm-stpw-basic.csv")
+res_ldatuning_general <- read_csv("data-manual/ldatuning-rm-stpw-general.csv")
+res_ldatuning_original <- read_csv("data-manual/ldatuning-rm-stpw-original.csv")
 
-# Result of the ldatuning
-
-## Read the result of the ldatuning (run in another PC in Kyoto Univ.)
-ldatuning_result <- read_csv("data/result-ldatuning_external-PC.csv")
-
-## Visualization of the ldatuning result
-ldatuning_result %>% 
-  pivot_longer(-1, names_to = "metrics", values_to = "value") %>% 
-  group_by(metrics) %>% 
-  mutate(value_scaled = scale(value)[,1]) %>% 
-  ungroup() %>% 
-  mutate(group = if_else(metrics == "Arun2010" | metrics == "CaoJuan2009", "1", "2")) %>% 
-  ggplot(aes(x = topics, y = value_scaled, group = metrics, colour = metrics)) + 
-  geom_point(aes(shape = metrics)) +
-  geom_line(aes(linetype = metrics)) +
-  annotate("rect", 
-           xmin = 25, xmax = 150, 
-           ymin = -3, ymax = 4,
-           alpha = 0.2, fill = "grey") +
-  scale_x_continuous(breaks = seq(0, 300, 10)) +
-  facet_grid(group ~ .) +
-  scale_color_manual(values=as.vector(cols25(4))) +
-  labs(x = "Metrics values", y = "The number of topics (K)") +
-  theme_ipsum(axis_text_size = 8,
-              axis_title_just = "center",
-              base_family = "Helvetica") +
-  theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        strip.text = element_blank())
+# Visualize the results
+vizLDAtuning(res_ldatuning_basic)
+vizLDAtuning(res_ldatuning_general)
+vizLDAtuning(res_ldatuning_original)
 
 ## Save the visualized result
-ggsave("fig/Fig-S01_ldatuning-output.png",
-       units = "mm", width = 174, height = 200)
-ggsave("submission/biodivers-conserv-1st/images/Fig-S01_ldatuning-output.eps", 
-       units = "mm", width = 174, height = 200, device = cairo_ps)
+# ggsave("fig/Fig-S01_ldatuning-output.png",
+#        units = "mm", width = 174, height = 200)
+# ggsave("submission/biodivers-conserv-1st/images/Fig-S01_ldatuning-output.eps", 
+#        units = "mm", width = 174, height = 200, device = cairo_ps)

@@ -13,83 +13,27 @@
 rm(list = ls())
 gc(); gc();
 
-## Packages
-library(tidyverse) # for data manipulation
-library(magrittr) # to use %<>% command
-library(wordcloud) # to draw wordcloud
-library(pals) # to use color palette
-library(hrbrthemes) # to use theme_ipsum() function
-library(readxl)
+# Package
+pacman::p_load(tidyverse,
+               magrittr,
+               pals,
+               hrbrthemes)
 
-## Color palette
+# Color palette
 pal_orig <- c(rep(pals::cols25(25), 2))
 
-## Data
-### Outputs of LDA inference
-theta <- read_csv("data/result-lda-inference-topic.csv")
-beta <- read_csv("data/result-lda-inference-term.csv")
+# Data
+theta <- read_csv("data/lda-output-02_doc-topic.csv")
+theta_tweet <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
 
-### 元のTweetデータ
-tweet_ias <- read_csv("data-raw/tweets_ias_2008_2022.csv")
-
-### LDA用にDTM変換する直前のデータ（前処理により複数のツイートデータが失われている。）
-df_id_tokens_pre <- read_csv("data/df-id-tokens-rm-stopword.csv")
-
-#------------------------------------------------------------------------------
-
-# Characteristics of each topics
-
-## Create data frame for Wordclouds
-beta_df <- as.data.frame(beta)
-beta_t_matrix <- t(beta_df)
-beta_t_df <- as.data.frame(beta_t_matrix)
-
-df_topic_name <- data.frame(topic = "topic", 
-                            num1 = c(rep("0", 9), 
-                                     rep("", 30-9)),
-                            num2 = seq(1:30)) %>% 
-  transmute(topic = str_c(topic, num1, num2))
-
-colnames(beta_t_df) <- df_topic_name$topic
-beta_t_df$term <- rownames(beta_t_df)
-
-# Create wordcloud of each topic
-for (i in 1:30) {
-  # term-frequency
-  df_wc <- beta_t_df %>% 
-    transmute(term, freq = beta_t_df[, i]) %>% 
-    arrange(desc(freq)) %>% 
-    head(30) # top 30 words
-  # term
-  words <- df_wc$term
-  # frequency
-  freq <- as.vector(unlist(df_wc$freq))
-  # family to show Japanese words
-  par(family = "HiraKakuProN-W3")
-  # random seed
-  set.seed(135)
-  # plot wordcloud
-  path_wc <- str_c("fig/wc_topic/wc-", i, ".png")
-  png(path_wc, width = 600, height = 600)
-  par(family="HiraKakuPro-W3") ##日本語フォントでもok
-  wordcloud(words = words, 
-            freq = freq, 
-            max.words = 30, 
-            random.order = FALSE, 
-            rot.per = 0.50, 
-            colors = cols25(6))
-  dev.off()
-  Sys.sleep(1)
-}
-
-remove(beta, beta_df, beta_t_df, beta_t_matrix)
+# The number of topics
+K <- ncol(theta)
 
 #------------------------------------------------------------------------------
 
 # Topic distribution in whole text data
-
 theta %>% 
-  pivot_longer(cols = c(`1`:`30`),
+  pivot_longer(cols = c(1:K),
                names_to = "topic",
                values_to = "prob") %>% 
   group_by(topic) %>% 
@@ -102,37 +46,28 @@ theta %>%
               axis_title_just = "center",
               base_family = "Helvetica")
 
-#------------------------------------------------------------------------------
-
-# time series trend
-
-## 最終的にLDAにかけられたもののみ抽出する。
-lda_tweets <- tweet_ias %>% 
-  right_join(df_id_tokens_pre %>% 
-               transmute(id = title) %>% 
-               distinct(.keep_all = FALSE), by = "id") %>% 
-  arrange(id)
-
-lda_tweets %<>% 
-  arrange(id) %>% 
-  mutate(year = lubridate::year(date)) %>% 
-  dplyr::select(id, year, date, text)
+# Time series trends ----------------------------------------------------------
 
 ## 年で集計する。
-topic_proportion_per_year <- aggregate(theta, 
-                                       by = list(year = lda_tweets$year), 
-                                       mean)
+# 推定後そのまま解析続ける場合は以下でもOK
+# topic_proportion_per_year <- aggregate(theta, 
+#                                        by = list(year = tweet_finalizing$year), 
+#                                        mean)
+topic_proportion_per_year <- theta_tweet %>% 
+  pivot_longer(cols = c(1:K),
+               names_to = "topic",
+               values_to = "prob") %>% 
+  group_by(topic, year) %>% 
+  summarise(prob = mean(prob)) %>% 
+  ungroup()
 
-## Plot
 topic_proportion_per_year %>% 
-  pivot_longer(cols = -1, 
-               names_to = "topic", values_to = "prob") %>% 
   mutate(topic = as.numeric(topic)) %>% 
   mutate(name_add = if_else(topic <=  9, "0", ""),
          topic = str_c("Topic ", name_add, topic)) %>% 
   ggplot(aes(x = year, y = prob, 
              group = topic, colour = as.factor(topic))) + 
-  geom_line(size = 1, show.legend = FALSE) + 
+  geom_line(linewidth = 1, show.legend = FALSE) + 
   scale_color_manual(values = as.vector(pal_orig)) + 
   facet_wrap(. ~ topic, ncol = 6, nrow = 5) +
   labs(x = "Year", y = "Probability") +
@@ -178,23 +113,25 @@ lda_tweets %<>%
 #             year > =  2008, "1st", "other")))))) %>% 
 #   dplyr::select(-year)
 
-## 年で集計する。
-topic_proportion_per_period <- aggregate(theta, 
-                                         by = list(period = lda_tweets$period), 
-                                         mean)
+# 年で集計する。
+topic_proportion_per_period <- theta_tweet %>% 
+  mutate(period = if_else(
+    year >=  2018, "3rd",
+    if_else(
+      year >=  2013, "2nd",
+      if_else(
+        year >=  2008, "1st", "other")))) %>% 
+  pivot_longer(cols = c(1:K),
+               names_to = "topic",
+               values_to = "prob") %>% 
+  group_by(topic, period) %>% 
+  summarise(prob = mean(prob)) %>% 
+  ungroup()
 
 ## Ranking change of the topics
-topic_proportion_per_period_t <- t(topic_proportion_per_period %>% 
-                                     dplyr::select(-period)) %>% 
-  as.data.frame()
-colnames(topic_proportion_per_period_t) <- c("1st", "2nd", "3rd"
-                                             #, "4th", "5th" # 5期間の場合
-                                             )
-rownames(topic_proportion_per_period_t) <- 
-  colnames(topic_proportion_per_period %>% 
-             dplyr::select(-period))
-
-topic_proportion_per_period_t
+topic_proportion_per_period_t <- topic_proportion_per_period %>% 
+  pivot_wider(names_from = period,
+              values_from = prob)
 
 topic_rank_change <- topic_proportion_per_period_t %>% 
   arrange(desc(`1st`)) %>% mutate(`1st` = c(1:30)) %>% 

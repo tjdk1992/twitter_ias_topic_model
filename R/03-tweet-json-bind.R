@@ -69,7 +69,9 @@ for (i in 1:length(dataframe_paths)) {
 }
 
 # Write data
-write_csv(tweet_df_binded, "data/tweet_01-binded.csv")
+tweet_df_binded %>% 
+  mutate(id_raw = row_number()) %>% 
+  write_csv("data/tweet-01_binded.csv")
 
 # Bind JSON into tidy tibble --------------------------------------------------
 
@@ -108,6 +110,3 @@ write_csv(tweet_df_binded, "data/tweet_01-binded.csv")
 #                                     "data-raw/doc-tweet-ias/doc-tweet-",
 #                                     "")) %>% 
 #   dplyr::select(-sourceFile)
-# 
-# # Write data
-# write_csv(tweet_tidy_binded, "data/tweet-binded-tidy.csv")

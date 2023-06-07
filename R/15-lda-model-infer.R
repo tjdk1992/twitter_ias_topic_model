@@ -13,72 +13,89 @@
 rm(list = ls())
 gc(); gc();
 
-## Packages
-library(tidyverse) # for data manipulation
-library(topicmodels) # for LDA inference™
-library(tidytext) # to use cast_dtm function
-library(writexl)
-library(tictoc)
+# Packages
+pacman::p_load(tidyverse,   # for data manipulation
+               topicmodels, # for LDA inference
+               tidytext,    # to create document-term matrix
+               writexl      # to write excel sheet
+               )
 
-## Color palette
-pal_orig <- c(rep(pals::cols25(25), 2))
+# Data
+## Token
+tokens_finalized <- read_csv("data/tokens-05_rm-stpw-general.csv")
+## Tweets
+tweet_finalizing <- read_csv("data/tweet-03_cleansed.csv")
 
-## Data
-df_id_tokens_rm_stopword <- read_csv("data/df-id-tokens-rm-stopword.csv")
-df_id_tokens_rm_stopword %<>% 
-  filter(term != "好き") %>% 
-  filter(term != "嫌い") %>% 
-  filter(term != "良い") %>% 
-  filter(term != "悪い")
-#------------------------------------------------------------------------------
+# Document-term matrix---------------------------------------------------------
 
-# Document-term matrix
+# Remove tweets containing only 1 term
+tokens_finalized %<>% 
+  anti_join(tokens_finalized %>% 
+              group_by(id_orig) %>% 
+              summarise(n = n()) %>% 
+              filter(n < 2) %>% 
+              dplyr::select(id_orig),
+            by = "id_orig")
 
-## Create document term matrix
-dtm_rm_stopword <- df_id_tokens_rm_stopword %>% 
-  arrange(title) %>% 
-  cast_dtm(document = "title", 
-           term = "term", 
-           value = "count")
+# Export tweets finally included for LDA inference
+tweet_finalizing %<>% 
+  arrange(id_orig) %>% 
+  inner_join(tokens_finalized %>% 
+               dplyr::select(id_orig) %>% 
+               arrange(id_orig) %>% 
+               distinct(.keep_all = TRUE),
+             by = "id_orig")
 
-## Remove tokens data to release memory
-remove(df_id_tokens_rm_stopword)
+# Export final tweets
+write_csv(tweet_finalizing, "data/tweet-04_finalized.csv")
 
-#------------------------------------------------------------------------------
+# Create DTM
+dtm_finalized <- tokens_finalized %>% 
+  group_by(id_orig, term) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  arrange(id_orig) %>% 
+  tidytext::cast_dtm(document = "id_orig",
+                     term = "term",
+                     value = "count")
 
-# infer lda topic model
+# Inference LDA----------------------------------------------------------------
 
+# The number of topics
 K <- 30
-tic()
-topicModel <- LDA(dtm_rm_stopword,
+
+# Model inference
+topicModel <- LDA(dtm_finalized,
                   k = K,
                   method = "Gibbs",
-                  control = list(alpha = 1, 
+                  control = list(alpha = 50 / K, 
                                  iter = 1000, 
                                  verbose = 25, 
                                  seed = 123))
-toc()
 
-topicList <- as.data.frame(terms(topicModel, 20)) # label manually
-write_xlsx(topicList, "table/TABLE_1_20230430_B_alpha1.xlsx")
+# Extract data-----------------------------------------------------------------
 
-## Extract data
+# LDA outputs
 tmResult <- topicmodels::posterior(topicModel)
 str(tmResult)
+
 theta <- tmResult$topics
 beta <- tmResult$terms
 
-  ## Export data
-### topic-document distribution
-write_csv(as_tibble(theta), "data/result-lda-inference-topic.csv")
-### term-topic distribution
-write_csv(as_tibble(beta), "data/result-lda-inference-term.csv")
+# Export data
+## term-topic distribution
+write_csv(as_tibble(beta), "data/lda-output-01_topic-term.csv")
+## topic-document distribution
+write_csv(as_tibble(theta), "data/lda-output-02_doc-topic.csv")
+## topic-document distribution with tweet information
+theta %>% 
+  as_tibble() %>% 
+  cbind(tweet_finalizing) %>% 
+  write_csv("data/lda-output-03_doc-topic-tweet.csv")
 
-#------------------------------------------------------------------------------
+# Topic-term relation----------------------------------------------------------
 
-# Topic listの英訳
-
-## 書き出し
+# Table of terms contained in each topic
 topicList <- as.data.frame(terms(topicModel, 20)) # label manually
 class(topicList)
 topicList_t <- t(topicList) %>% 
@@ -89,9 +106,42 @@ topicList_table <- topicList_t %>%
   mutate(terms = str_c(V1, ", ", V2, ", ", V3, ", ", V4, ", ", V5, ", ",
                        V6, ", ", V7, ", ", V8, ", ", V9, ", ", V10, ", ",
                        V11, ", ", V12, ", ", V13, ", ", V14, ", ", V15, ", ",
-                       V16, ", ", V17, ", ", V18, ", ", V19, ", ", V20, ", ")) %>%
-  dplyr::select(topic, terms)
+                       V16, ", ", V17, ", ", V18, ", ", V19, ", ", V20)) %>%
+  dplyr::select(topic, terms) %>% 
+  write_xlsx("table/TABLE_LDA-topic-term20.xlsx")
 
-write_xlsx(topicList_table, "table/TABLE_1_20230422.xlsx")
+# English version term list
+topicList %>% 
+  mutate(id_pivot = row_number()) %>% 
+  pivot_longer(cols = -id_pivot,
+               names_to = "topic",
+               values_to = "term") %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  mutate(term_en = "") %>% 
+  write_xlsx("data-manual/term-topic-translating.xlsx")
 
-write_xlsx(topicList, "table/TABLE_1_20230422.xlsx")
+term_en <- read_excel("data-manual/term-topic-translated.xlsx")
+
+topicList_en <- topicList %>% 
+  mutate(id_pivot = row_number()) %>% 
+  pivot_longer(cols = -id_pivot,
+               names_to = "topic",
+               values_to = "term") %>% 
+  left_join(term_en %>% 
+              dplyr::select(term, term_en),
+            by = "term") %>% 
+  pivot_wider(names_from = topic,
+              values_from = term)
+
+topicList_t_en <- t(topicList_en) %>% 
+  as.data.frame()
+topicList_t$topic <- rownames(topicList_t_en)
+topicList_table <- topicList_t_en %>% 
+  as_tibble() %>% 
+  mutate(terms = str_c(V1, ", ", V2, ", ", V3, ", ", V4, ", ", V5, ", ",
+                       V6, ", ", V7, ", ", V8, ", ", V9, ", ", V10, ", ",
+                       V11, ", ", V12, ", ", V13, ", ", V14, ", ", V15, ", ",
+                       V16, ", ", V17, ", ", V18, ", ", V19, ", ", V20)) %>%
+  dplyr::select(topic, terms) %>% 
+  write_xlsx("table/TABLE_LDA-topic-term20_en.xlsx")

@@ -14,124 +14,221 @@ rm(list = ls())
 gc(); gc();
 
 # Packages
-library(tidyverse)
-library(magrittr)
-library(lubridate)
-library(stringi)
+pacman::p_load(tidyverse, # for data manipulation
+               magrittr,  # to overwrite data
+               lubridate, # to handle date class
+               stringi,   # to handle strings
+               writexl,   # to write excel sheets
+               readxl     # to read excel sheets
+               )
 
 # Data
-tweet_df_binded <- read_csv("data/tweet_01-binded.csv")
-dat_ias_ja <- read_csv("data/basic-ias-info.csv")
+tweet_cleansing <- read_csv("data/tweet-02_screened.csv")
+ias_ja <- read_csv("data/basic-ias-info.csv")
 
-###############################################################################
-# 注意: Rの有効桁数は16程度なので、諸々のidは十進数かcharacter型で扱う！
-###############################################################################
+# Prepare basic data-----------------------------------------------------------
 
-# Preparation -----------------------------------------------------------------
+# Select necessary columns
+tweet_cleansing %<>% 
+  dplyr::select(id_raw, id_orig,
+                name_ja, name_sp,
+                date, year, 
+                text)
 
-# Extract file name
-tweet_df_binded %<>% 
-  mutate(code_ias = str_replace_all(MyFile, 
-                                    "data-raw/doc-tweet-ias/doc-tweet-",
-                                    "")) %>% 
-  dplyr::select(-MyFile)
+# 扱いやすくするために可能なものは半角にしてスペースは除外する。
+tweet_cleansing %<>% 
+  mutate(text = stringi::stri_trans_general(text, "Fullwidth-Halfwidth"))
 
-# Dateを整理してYearを作成
-tweet_df_binded %<>% mutate(date = date(created_at), 
-                            year = year(created_at))
+# Cleansing tweet--------------------------------------------------------------
 
-# Screen data -----------------------------------------------------------------
+# tweetの確認
+tweet_cleansing %>% 
+  sample_n(1000) %>% 
+  pull(text)
 
-# Limit tweet type
-## Count the type category
-tweet_df_binded %>% 
-  group_by(type) %>% 
+# -----------------------------------------------------------------------------
+# 除外すべきは以下のものたち
+# 日付、メタ文字、URL、メディア名、検索ワード、ハッシュタグ、メンションタグ
+# -----------------------------------------------------------------------------
+
+# Remove hash tags, mention tags, meta-chr and spaces
+tweet_cleansing %<>% 
+  mutate(text = str_replace_all(text, c("#[^\\s#]*" = "", # Hash tag
+                                        "@[^\\s@]*" = "", # Mention
+                                        "\n" = "",
+                                        "\r" = "",
+                                        "\t" = "",
+                                        "[:blank:]" = "")))
+tweet_cleansing
+# Remove date and other general expression
+tweet_cleansing %<>% 
+  mutate(text = str_replace_all(
+    text, c("\\([月火水木金土日]\\)" = "", # 曜日
+            "[月火水木金土日]曜日" = "",
+            "[0-9]{4}年([1-9]|0[1-9]|1[0-2])月([1-9]|0[1-9]|[12][0-9]|3[01])日" = "",
+            "([1-9]|0[1-9]|1[0-2])月([1-9]|0[1-9]|[12][0-9]|3[01])日" = ""
+    )))  # 改行文字
+
+# Remove searched query
+term_query <- c(ias_ja %>% 
+                  mutate(n_chr = nchar(KATAKANA)) %>% 
+                  arrange(desc(n_chr)) %>% 
+                  mutate(KATAKANA = 
+                           stri_trans_general(KATAKANA, 
+                                              "Fullwidth-Halfwidth")) %>% 
+                  pull(KATAKANA),
+                "特定外来生物", "要注意外来生物", "侵略的外来種",
+                "外来種", "移入種", "帰化種",
+                "外来", "侵入", "移入", "帰化")
+
+# 削除
+for (i in 1:length(term_query)) {
+  term_rm <- term_query[i]
+  tweet_cleansing %<>% mutate(text = str_replace_all(text, term_rm, ""))
+}
+
+# メディアの引用が多いので、この時点で除外しておく。
+## 記事等のタイトルの除外について
+## Quotedと同じニュース記事の引用をみつける
+## 引用記事タイトルはその人の発言としてみなしづらいので除外。
+## URLを除外してsummarizeした時に複数出てくる文字列を抽出して、
+## 複数あるもの（個別のコメントが含まれる場合にはgroupingされないとみなす）
+## をテキスト中から除外する。
+
+## URLを貼らずに記事のタイトルだけを貼ったようなtweetが散見されるため。
+## 抽出したstringsの除外はtweet_normal_wo_URLにも適用する。
+str_rm <- tweet_cleansing %>% 
+  filter(str_detect(text, "https?://.*[a-zA-Z0-9]")) %>% 
+  mutate(text = str_replace_all(text, 
+                                c("https?://.*[a-zA-Z0-9]" = "",
+                                  "^[:“”-]+" = "",
+                                  "[…:“”\\|\\.]+$" = "",
+                                  "から$" = "",
+                                  "より$" = ""))) %>% 
+  filter(text != "") %>% 
+  group_by(text) %>% 
   summarise(n = n())
-## Check the all type
-tweet_df_binded %>% 
-  # check "quoted", "replied_to", "quoted-replied_to", and "retweeted"
-  filter(type == "retweeted") %>% 
-  dplyr::select(text)
-## Check the retweeted contents
-tweet_df_binded %>% 
-  filter(type == "retweeted") %>% 
-  dplyr::select(text) %>% 
-  filter(!(str_detect(text, pattern = "^RT"))) %>% 
-  head(10) %>% 
-  unlist(use.name = FALSE)
-## Remove tweeted tweet
-tweet_df_binded %<>% 
-  mutate(type = replace_na(type, "original")) %>% 
-  filter(!(type == "retweeted"))
 
-# Merge the ias information
-## Merge
-tweet_df_binded %<>% 
-  left_join(dat_ias_ja %>% 
-              dplyr::select(code_ias, name_ja, name_sp), 
-            by = "code_ias") %>% 
-  dplyr::select(-code_ias)
-## Check whether the merging was correctly done
-filter(tweet_df_binded, is.na(name_ja))
+# View the results
+str_rm %>% 
+  mutate(n_chr = nchar(text)) %>% 
+  arrange(n_chr) %>% 
+  dplyr::select(n, n_chr, text) # %>% View()
 
-# Limit Language to Japanese
-table(tweet_df_binded$lang)
-tweet_df_binded <- tweet_df_binded %>% 
-  filter(lang == "ja") %>% 
-  dplyr::select(-lang)
+# メディア名と本文を分解してよりessentialな状態にする。
 
-# Check validity of the searched query
-## Check "外来", "移入", "帰化", "侵入"
-tweet_df_binded %>% 
-  filter(str_detect(text, pattern = "侵入")) %>% 
-  filter(!(str_detect(text, pattern = "外来") |
-             str_detect(text, pattern = "移入") |
-             str_detect(text, pattern = "帰化"))) %>% 
-  sample_n(size = 1000) %>% 
-  dplyr::select(name_ja, text) %>% 
-  View()
-## 侵入はほとんどgeneralな使われ方をしているので除外する。
-## 例：「家に侵入してきた」
-## 侵入とその他3つのqueryが同時に含まれる場合は除外しない。
-tweet_df_binded %<>% 
-  filter(str_detect(text, pattern = "外来") |
-           str_detect(text, pattern = "移入") |
-           str_detect(text, pattern = "帰化"))
+## |で分割
+str_rm %<>% 
+  dplyr::select(-n) %>% 
+  # まずは|で分割
+  separate(text, sep = "\\|", into = str_c("SEP", seq(50)), fill = "right") %>%
+  pivot_longer(cols = SEP1:SEP50,
+               names_to = "SEP",
+               values_to = "text") %>%
+  mutate(text = if_else(SEP != "SEP1", str_c("|", text), text),
+         text = str_replace_all(text, "\\|$", "")) %>% 
+  dplyr::select(-SEP) %>%
+  filter(!(is.na(text))) %>%
+  # 続いて-で分割
+  separate(text, sep = "-", into = str_c("SEP", seq(50)), fill = "right") %>% 
+  pivot_longer(cols = SEP1:SEP50,
+               names_to = "SEP",
+               values_to = "text") %>% 
+  mutate(text = if_else(SEP != "SEP1", str_c("-", text), text),
+         text = str_replace_all(text, "-$", "")) %>% 
+  dplyr::select(-SEP) %>% 
+  filter(!(is.na(text))) %>% 
+  # :で分割
+  separate(text, sep = ":", into = str_c("SEP", seq(50)), fill = "right") %>% 
+  pivot_longer(cols = SEP1:SEP50,
+               names_to = "SEP",
+               values_to = "text") %>% 
+  mutate(text = if_else(SEP != "SEP1", str_c(":", text), text),
+         text = str_replace_all(text, ":$", "")) %>% 
+  dplyr::select(-SEP) %>% 
+  filter(!(is.na(text))) %>% 
+  # 続いて後方から最短一致で()内を分割
+  mutate(text = str_replace_all(text, "\\((.*?)\\)$", "＿\\(\\1\\)")) %>% 
+  mutate(text = str_replace_all(text, "\\[(.*?)\\]$", "＿\\[\\1\\]")) %>% 
+  mutate(text = str_replace_all(text, "【(.*?)】$", "＿【\\1】")) %>% 
+  mutate(text = str_replace_all(text, "^\\((.*?)\\)", "\\(\\1\\)＿")) %>% 
+  mutate(text = str_replace_all(text, "^\\[(.*?)\\]", "\\[\\1\\]＿")) %>% 
+  mutate(text = str_replace_all(text, "^【(.*?)】", "【\\1】＿")) %>% 
+  separate(text, sep = "＿", into = str_c("SEP", seq(50)), fill = "right") %>% 
+  pivot_longer(cols = SEP1:SEP50,
+               names_to = "SEP",
+               values_to = "text") %>% 
+  dplyr::select(-SEP) %>% 
+  filter(!(is.na(text)))
 
-# Remove duplicates within IAS species
-## Check duplicated data
-tweet_df_binded %>% 
-  group_by(id, name_sp) %>% 
+# Manualで選ぶ
+str_rm %>% 
+  mutate(text = stri_trans_general(text, "Halfwidth-Fullwidth"),
+         n_chr = nchar(text)) %>% 
+  filter(n_chr > 2, n_chr < 20) %>% 
+  filter(!(str_detect(text, "。"))) %>%
+  filter(!(str_detect(text, "、"))) %>%
+  filter(!(str_detect(text, "「"))) %>%
+  filter(!(str_detect(text, "」"))) %>%
+  filter(!(str_detect(text, "った"))) %>%
+  filter(!(str_detect(text, "って"))) %>%
+  filter(!(str_detect(text, "です"))) %>%
+  filter(!(str_detect(text, "ます"))) %>%
+  filter(!(str_detect(text, "ました"))) %>%
+  filter(!(str_detect(text, "ません"))) %>%
+  filter(!(str_detect(text, "ください"))) %>%
+  filter(!(str_detect(text, "である"))) %>%
+  filter(!(str_detect(text, "^が"))) %>%
+  filter(!(str_detect(text, "^の"))) %>%
+  filter(!(str_detect(text, "^を"))) %>%
+  filter(!(str_detect(text, "[都道府県市区町村]$"))) %>%
+  mutate(text = stri_trans_general(text, "Fullwidth-Halfwidth")) %>% 
+  group_by(text) %>% 
   summarise(n = n()) %>% 
-  filter(n >= 2) %>% 
-  arrange(desc(n))
-## Remove duplicate (複数の名称で個別に検索をかけているので重複が生じうる)
-## 例えば、キョンとタイワンキョンなど
-tweet_df_binded %<>% distinct(.keep_all = TRUE)
+  ungroup() %>% 
+  arrange(desc(n)) %>%
+  mutate(text2 = text,
+         text = str_replace_all(text, c("^-" = "",
+                                        "^:" = "",
+                                        "^\\|" = "",
+                                        "^[\\(\\)【】\\[\\]]" = "",
+                                        "[\\(\\)【】\\[\\]]$" = "")),
+         text_check = str_replace_all(text, c("[:punct:]" = "",
+                                              "[:blank:]" = "")),
+         judge = "NA") %>% 
+  filter(!(str_detect(text, "^[0-9a-zA-Z]*$"))) %>% 
+  dplyr::select(-text_check) %>% 
+  mutate(n_chr = nchar(text)) %>% 
+  filter(n != 1) %>%
+  write_xlsx("data-manual/term-rm-tweet-checking.xlsx")
+  # 記事関連を全て除外
 
-# Add original id
-tweet_df_binded %<>% mutate(id_orig = row_number())
+str_rm <- read_excel("data-manual/term-rm-tweet-checked.xlsx")
 
-#------------------------------------------------------------------------------
+list_str_rm <- rbind(
+  str_rm %>% 
+    filter(judge == 1) %>% 
+    transmute(text), 
+  str_rm %>% 
+    filter(judge == 2) %>% 
+    transmute(text = text2)) %>% 
+  mutate(n_chr = nchar(text)) %>% 
+  arrange(desc(n_chr)) %>% 
+  pull(text)
 
-# Select variables for analysis
+for (i in 1:length(list_str_rm)) {
+  pattern = list_str_rm[i]
+  tweet_cleansing %<>% 
+    mutate(text = str_replace_all(text, pattern = stringr::fixed(pattern), ""))
+}
 
-# Check the structure again
-glimpse(tweet_df_binded)
-
-# Extract necessary variables
-tweet_tidy <- transmute(tweet_df_binded,
-                        id_orig,
-                        date, year,
-                        ct_rt = retweet_count, 
-                        ct_rep = reply_count, 
-                        ct_qt = quote_count,
-                        ct_imp = impression_count,
-                        name_ja, name_sp,
-                        text)
-
-# Remove binded data frame
-rm(tweet_df_binded)
-
-# Write data
-write_csv(tweet_tidy, "data/basic-ias-tweet.csv")
+# データの書き出し
+tweet_cleansing %>% 
+  mutate(
+    # URLの削除
+    text = str_replace_all(text, "https?://.*[a-zA-Z0-9]", ""),
+    # 全角に戻しておく
+    text = stringi::stri_trans_general(text, "Halfwidth-Fullwidth"),
+  ) %>% 
+  # 書き出し
+  write_csv("data/tweet-03_cleansed.csv")

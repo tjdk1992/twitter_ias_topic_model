@@ -8,13 +8,10 @@
 #-----------------------------------------------------------------------------#
 
 # Setup -----------------------------------------------------------------------
-
-# Packages
-pacman::p_load(tidyverse, # data manipulation + ggplot2 graphics
-               )
+library(tidyverse)
 
 #------------------------------------------------------------------------------
-# Function name: XXXXXX
+# Function name: viewTop5000
 # Functioning: 
 # 
 # Inputs:
@@ -48,15 +45,15 @@ makeDTMatrix <- function(df_tokens) {
     anti_join(df_tokens %>% 
                 group_by(id_orig) %>% 
                 summarise(n = n()) %>% 
-                filter(n == 2) %>% 
+                filter(n == 1) %>% 
                 dplyr::select(id_orig),
               by = "id_orig") %>% 
     group_by(id_orig, term) %>% 
     summarise(count = n()) %>% 
     ungroup() %>% 
-    cast_dtm(document = "id_orig",
-             term = "term",
-             value = "count")
+    tidytext::cast_dtm(document = "id_orig",
+                       term = "term",
+                       value = "count")
 }
 
 #------------------------------------------------------------------------------
@@ -72,16 +69,16 @@ makeDTMatrix <- function(df_tokens) {
 runLDAtest <- function(dtm, 
                        K_from = 15, K_to = 60, K_by = 15, 
                        seed = 123, 
-                       path_base = "data/data-lda-test/", 
+                       path_base = "data-manual/lda-stpw-test/", 
                        file_name = "topic-list-stopword-rm") {
   for (K in seq(K_from, K_to, K_by)) {
-    topicModel <- LDA(dtm,
-                      k = K,
-                      method = "Gibbs",
-                      control = list(alpha = 50/K, 
-                                     iter = 1000, 
-                                     verbose = 25, 
-                                     seed = seed))
+    topicModel <- topicmodels::LDA(dtm,
+                                   k = K,
+                                   method = "Gibbs",
+                                   control = list(alpha = 50/K, 
+                                                  iter = 1000, 
+                                                  verbose = 25, 
+                                                  seed = seed))
     name_path <- str_c(path_base,
                        Sys.time() %>% 
                          str_remove_all("-") %>% 
@@ -131,9 +128,50 @@ vizLDAtuning <- function(ldatuning_result) {
     scale_color_manual(values=as.vector(cols25(4))) +
     labs(x = "Metrics values", y = "The number of topics (K)") +
     theme_ipsum(axis_text_size = 8,
-                axis_id_orig_just = "center",
+                axis_title_just = "center",
                 base_family = "Helvetica") +
     theme(legend.position = "bottom",
           axis.text.x = element_text(angle = 45, hjust = 1),
           strip.text = element_blank())
+}
+
+#------------------------------------------------------------------------------
+# Function name: vizTopSpecieCt
+# Functioning: 
+# 
+# Inputs:
+#
+# Outputs: 
+#
+#------------------------------------------------------------------------------
+
+vizTopSpecieCt = function(dat, biol, lang){
+  # 1:Mammal, 2:Bird, 3:Reptile, 4:Amphibian, 5:Fish,
+  # 6.Invertebrate(insect), 7:Invertebrate(other), 8:Plant
+  biol <- c("mammal", "bird", "reptile", "amphibian", "fish", 
+            "invertebrate(insect)", "invertebrate(other)", "plant")[biol]
+  # 1:English, 2:Japanese
+  lang <- c("name_sp", "name_ja")[lang]
+  if (lang == "name_sp") {
+    fam <- "Helvetica"
+  } else {
+    fam <- "HiraKakuPro-W3"
+  }
+  ias_count_total %>% 
+    filter(group_biol == biol) %>% 
+    #group_by(eval(parse(text = lang))) %>%
+    # summarise(n = n()) %>%
+    mutate(species = eval(parse(text = lang))) %>% 
+    arrange(desc(count)) %>% 
+    head(30) %>% 
+    ggplot() + 
+    geom_bar(aes(x = reorder(species, count), 
+                 y = count), 
+             stat = "identity", fill = "#565555") +
+    # coord_flip() +
+    labs(x = "", y = "", subtitle = toupper(biol)) +
+    theme_ipsum(base_family = fam, base_size = 8, axis_text_size = 8, 
+                axis_title_size = 12, axis_title_just = "mc") + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1), 
+          plot.margin = margin(0.1,0.1,0.1,0.1, "cm"))
 }

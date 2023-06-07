@@ -13,33 +13,27 @@
 rm(list = ls())
 gc(); gc();
 
-# Packages
-library(tidyverse) # for data manipulation
-library(readxl) # to read excel sheet
-library(lubridate) # to address date data
-library(magrittr) # to use pipe function
-library(stringi) # to address Japanese characters
-library(zipangu)
-library(tictoc) # for calculation of time consumed in the processes
-library(RMeCab) # to preprocess Japanese text data
-library(purrr) 
-library(hrbrthemes)
+# Package
+pacman::p_load(tidyverse
+               )
 
 # Data
-df_id_tokens <- read_csv("data/df-id-tokens-preprocessed.csv")
+token_cutting <- read_csv("data/tokens-02_cleansed.csv")
 
 # 出現頻度による単語の除外 ----------------------------------------------------
 
 # 出現頻度のチェック
-N_doc <- length(unique(df_id_tokens$title))
-tokens_summary_check <- df_id_tokens %>% 
+N_doc <- length(unique(token_cutting$id_orig))
+tokens_summary_check <- token_cutting %>% 
   group_by(term) %>% 
-  summarise(n = n(), freq = n / N_doc * 100)
+  summarise(n = n(), freq = n / N_doc * 100) %>% 
+  as.data.frame()
 
 # 出現頻度の高い単語を確認
 arrange(filter(tokens_summary_check, freq > 50), desc(freq))
 arrange(filter(tokens_summary_check, freq > 25), desc(freq))
-arrange(filter(tokens_summary_check, freq > 20), desc(freq)) # この辺かな
+arrange(filter(tokens_summary_check, freq > 20), desc(freq))
+arrange(filter(tokens_summary_check, freq > 15), desc(freq)) # この辺かな…
 arrange(filter(tokens_summary_check, freq > 10), desc(freq))
 arrange(filter(tokens_summary_check, freq > 5), desc(freq))
 
@@ -53,15 +47,12 @@ arrange(filter(tokens_summary_check, freq < 0.0007), desc(freq))
 arrange(filter(tokens_summary_check, freq < 0.0008), desc(freq))
 arrange(filter(tokens_summary_check, freq < 0.0009), desc(freq))
 
-
 # 出現頻度の低い単語を除外する（n < 5）。
-df_id_tokens %<>% 
+token_cutting %<>% 
   anti_join(tokens_summary_check %>% 
-              filter(freq > 20 | freq < 0.001) %>% 
+              filter(freq > 15 | freq < 0.001) %>% 
               dplyr::select(term), 
             by = "term")
 
-rm(tokens_summary_check)
-
 # 前処理が完了したデータの書き出し
-write_csv(df_id_tokens, "data/df-id-tokens-cutted.csv")
+write_csv(token_cutting, "data/tokens-03_cut.csv")
