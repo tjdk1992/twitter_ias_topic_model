@@ -20,13 +20,13 @@ pacman::p_load(tidyverse, # for data manipulation
                RMeCab)    # for tokenization
 
 # Data
-tweet_tokenizing <- read_csv("data/tweet-03_cleansed.csv")
+tweet_tokenizing <- read_csv("data/tweet-04_cleansed.csv")
 
 # Tokenization-----------------------------------------------------------------
 
 # Convert tibble into data frame (RMeCab only handle data frame)
 tweet_tokenizing %<>% 
-  dplyr::select(id_orig, text) %>% 
+  dplyr::select(id_cleansed, text) %>% 
   as.data.frame()
 
 # Tokenize text by RMeCab
@@ -36,7 +36,7 @@ list_token_ias <- RMeCabDF(tweet_tokenizing, "text", 1)
 token_ias <- purrr::pmap_df(list(nv = list_token_ias,
                                  title = tweet_tokenizing$id),
                             function(nv, title){
-                              tibble(id_orig = title,
+                              tibble(id_cleansed = title,
                                      term = nv,
                                      hinshi = names(nv))
                             })

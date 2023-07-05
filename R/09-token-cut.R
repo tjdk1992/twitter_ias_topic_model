@@ -23,7 +23,7 @@ token_cutting <- read_csv("data/tokens-02_cleansed.csv")
 # 出現頻度による単語の除外 ----------------------------------------------------
 
 # 出現頻度のチェック
-N_doc <- length(unique(token_cutting$id_orig))
+N_doc <- length(unique(token_cutting$id_cleansed))
 tokens_summary_check <- token_cutting %>% 
   group_by(term) %>% 
   summarise(n = n(), freq = n / N_doc * 100) %>% 

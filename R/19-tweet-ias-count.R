@@ -14,12 +14,13 @@ rm(list = ls())
 gc(); gc();
 
 ## Packages
-library(readxl)
-library(tidyverse)
-library(lubridate)
+pacman::p_load(tidyverse,
+               readxl,
+               lubridate
+               )
 
 ## Data
-tweet_finalized <- read_csv("data/tweet-04_finalized.csv")
+tweet_finalized <- read_csv("data/tweet-05_finalized.csv")
 dat_ias_ja <- read_csv("data/basic-ias-info.csv")
 
 #------------------------------------------------------------------------------
@@ -33,9 +34,7 @@ tweet_count_total <- tweet_finalized %>%
 
 tweet_count_annual <- tweet_finalized %>% 
   group_by(name_sp, year) %>% 
-  summarise(count = n()) %>% 
-  group_by(name_sp) %>% 
-  summarise(count = mean(count))
+  summarise(count = n())
 
 ## Re-add the IAS information
 glimpse(dat_ias_ja)
@@ -49,7 +48,7 @@ tweet_count_total$count[is.na(tweet_count_total$count)] <- 0
 tweet_count_annual <- tweet_count_annual %>% 
   right_join(dat_ias_ja, by = "name_sp") %>% 
   dplyr::select(-c(code_ias, KATAKANA, katakana)) %>% 
-  dplyr::select(name_ja, name_sp, count, group_biol, taxon, reg1, reg2) %>% 
+  dplyr::select(name_ja, name_sp, year, count, group_biol, taxon, reg1, reg2) %>% 
   distinct(.keep_all = TRUE)
 tweet_count_annual$count[is.na(tweet_count_annual$count)] <- 0
 

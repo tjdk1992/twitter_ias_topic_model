@@ -15,10 +15,8 @@ gc(); gc();
 
 # Packages
 pacman::p_load(tidyverse,
-               readxl,
-               lubridate,
-               academictwitteR,
-               stringi)
+               academictwitteR
+               )
 
 # Bind JSON into data frame ---------------------------------------------------
 

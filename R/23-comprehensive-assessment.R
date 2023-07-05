@@ -14,18 +14,19 @@
 rm(list = ls())
 gc(); gc();
 
-## Packages
-library(tidyverse) # for data manipulation
-library(hrbrthemes) # for nice visualization
-library(magrittr) # for data manipulation
-library(pals) # to use color palette
+# Packages
+pacman::p_load(tidyverse,  # for data manipulation
+               hrbrthemes, # for nice visualization
+               magrittr, 　# for data manipulation
+               pals　　　　# to use color palette
+               )
 
-## Color palette
+# Color palette
 pal_orig <- c(rep(pals::cols25(25), 2))
 
-## Data
+# Data
 ### Outputs of LDA inference
-theta <- read_csv("data/result-lda-inference-topic.csv")
+theta <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
 
 ### 元のTweetデータ
 tweet_ias <- read_csv("data-raw/tweets_ias_2008_2022.csv")
@@ -34,47 +35,42 @@ tweet_ias <- read_csv("data-raw/tweets_ias_2008_2022.csv")
 df_id_tokens_lda <- read_csv("data/df-id-tokens-rm-stopword.csv")
 
 ### Occurred species list
-ias_occur_cum <- read_csv("data/ias_occured_cumsum.csv")
-
-### Occurred species list
-ias_occur <- read_csv("data/ias_occurred.csv")
+tweet_count_total <- read_csv("data/ias-count_total.csv")
+tweet_count_annual <- read_csv("data/ias-count_annual.csv")
 
 #------------------------------------------------------------------------------
 
-# Data preparation
+theta_sp <- theta %>% 
+  pivot_longer(cols = c(`1`:`25`),
+               names_to = "topic",
+               values_to = "prob") %>% 
+  group_by(name_sp, topic) %>% 
+  summarise(prob = mean(prob)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = "topic", 
+              values_from = prob)
 
-## Merge data
-dat_lda_sp <-df_id_tokens_lda %>% 
-  transmute(title) %>% 
-  distinct(.keep_all = FALSE) %>% 
-  arrange(title) %>% 
-  cbind(theta) %>% 
-  left_join(ias_occur,
-            by = "title") %>% 
-  filter(!(is.na(common)))
+df_clust_theta <- theta_sp %>% 
+  dplyr::select(`1`:`25`) %>% 
+  as.data.frame()
+rownames(df_clust_theta) <- theta_sp %>% pull(name_sp)
 
-## Check
-dat_lda_sp %>% 
-  group_by(title) %>% 
-  summarise(n = n()) %>% 
-  filter(n >= 2)
-## Example
-dat_lda_sp %>% 
-  filter(title == 220 |
-           title == 330 |
-           title == 686)
-## Example text
-tweet_ias %>% 
-  filter(id == 220 |
-           id == 330 |
-           id == 686) %>% 
-  dplyr::select(text) %>% 
-  pull() # OK
+dist_theta_sp <- dist(df_clust_theta)
 
-## Release memory by remove objects
-remove(df_id_tokens_lda, lda_tweets, theta, tweet_ias)
+rc = hclust(d=dist_theta_sp, method = "ward.D2")
 
-#------------------------------------------------------------------------------
+plot(rc)
+
+theta_sp$k7 <- cutree(rc, k = 7)
+theta_sp$k2 <- cutree(rc, k = 2)
+
+theta_sp %<>% 
+  inner_join(tweet_count_total, by = "name_sp")
+
+theta_sp %>% 
+  ggplot(aes(y = log(count))) +
+  geom_boxplot(aes(group = as.factor(k2))) +
+  theme_ipsum()
 
 # Topic distribution over organism groups
 

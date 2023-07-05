@@ -15,7 +15,6 @@ gc(); gc();
 
 # Package
 pacman::p_load(tidyverse,      # for data manipulation
-               lubridate,      # for handling date class
                academictwitteR # for handling twitter
                )
 

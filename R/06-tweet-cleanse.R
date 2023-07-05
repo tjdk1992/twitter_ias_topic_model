@@ -23,14 +23,14 @@ pacman::p_load(tidyverse, # for data manipulation
                )
 
 # Data
-tweet_cleansing <- read_csv("data/tweet-02_screened.csv")
+tweet_cleansing <- read_csv("data/tweet-03_screened.csv")
 ias_ja <- read_csv("data/basic-ias-info.csv")
 
 # Prepare basic data-----------------------------------------------------------
 
 # Select necessary columns
 tweet_cleansing %<>% 
-  dplyr::select(id_raw, id_orig,
+  dplyr::select(id_raw, id_screened,
                 name_ja, name_sp,
                 date, year, 
                 text)
@@ -229,6 +229,8 @@ tweet_cleansing %>%
     text = str_replace_all(text, "https?://.*[a-zA-Z0-9]", ""),
     # 全角に戻しておく
     text = stringi::stri_trans_general(text, "Halfwidth-Fullwidth"),
+    # idの付与
+    id_cleansed = row_number()
   ) %>% 
   # 書き出し
-  write_csv("data/tweet-03_cleansed.csv")
+  write_csv("data/tweet-04_cleansed.csv")

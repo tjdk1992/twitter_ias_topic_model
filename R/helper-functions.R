@@ -43,15 +43,15 @@ viewTop5000 <- function(df_tokens) {
 makeDTMatrix <- function(df_tokens) {
   df_tokens %>% 
     anti_join(df_tokens %>% 
-                group_by(id_orig) %>% 
+                group_by(id_cleansed) %>% 
                 summarise(n = n()) %>% 
                 filter(n == 1) %>% 
-                dplyr::select(id_orig),
-              by = "id_orig") %>% 
-    group_by(id_orig, term) %>% 
+                dplyr::select(id_cleansed),
+              by = "id_cleansed") %>% 
+    group_by(id_cleansed, term) %>% 
     summarise(count = n()) %>% 
     ungroup() %>% 
-    tidytext::cast_dtm(document = "id_orig",
+    tidytext::cast_dtm(document = "id_cleansed",
                        term = "term",
                        value = "count")
 }
@@ -99,43 +99,6 @@ runLDAtest <- function(dtm,
 }
 
 #------------------------------------------------------------------------------
-# Function name: XXXXXX
-# Functioning: 
-# 
-# Inputs:
-#
-# Outputs: 
-#
-#------------------------------------------------------------------------------
-
-vizLDAtuning <- function(ldatuning_result) {
-  ldatuning_result %>% 
-    pivot_longer(-topics, names_to = "metrics", values_to = "value") %>% 
-    group_by(metrics) %>% 
-    mutate(value_scaled = scale(value)[,1]) %>% 
-    ungroup() %>% 
-    mutate(group = if_else(metrics == "Arun2010" | 
-                             metrics == "CaoJuan2009", "1", "2")) %>% 
-    ggplot(aes(x = topics, y = value_scaled, group = metrics, colour = metrics)) + 
-    geom_point(aes(shape = metrics)) +
-    geom_line(aes(linetype = metrics)) +
-    annotate("rect", 
-             xmin = 25, xmax = 150, 
-             ymin = -4, ymax = 4,
-             alpha = 0.2, fill = "grey") +
-    scale_x_continuous(breaks = seq(0, 300, 10)) +
-    facet_grid(group ~ .) +
-    scale_color_manual(values=as.vector(cols25(4))) +
-    labs(x = "Metrics values", y = "The number of topics (K)") +
-    theme_ipsum(axis_text_size = 8,
-                axis_title_just = "center",
-                base_family = "Helvetica") +
-    theme(legend.position = "bottom",
-          axis.text.x = element_text(angle = 45, hjust = 1),
-          strip.text = element_blank())
-}
-
-#------------------------------------------------------------------------------
 # Function name: vizTopSpecieCt
 # Functioning: 
 # 
@@ -157,7 +120,7 @@ vizTopSpecieCt = function(dat, biol, lang){
   } else {
     fam <- "HiraKakuPro-W3"
   }
-  ias_count_total %>% 
+  dat %>% 
     filter(group_biol == biol) %>% 
     #group_by(eval(parse(text = lang))) %>%
     # summarise(n = n()) %>%

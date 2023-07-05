@@ -32,6 +32,11 @@ token_cleansing %<>%
            hinshi == "動詞" |
            hinshi == "形容詞")
 
+# 日本語を正規化する。
+token_cleansing %<>% 
+  mutate(term = stri_trans_general(term, "Halfwidth-Fullwidth"),
+         term = str_jnormalize(term))
+
 # 細々した不用品のクリーニング
 token_cleansing %<>% 
   mutate(
@@ -62,9 +67,6 @@ viewTop5000(token_cleansing)
 # 先頭が"ー"のものを削除
 token_cleansing %<>% mutate(term = str_replace_all(term, "^ー*", ""))
 
-# ーが２つ以上連なっているものを正規化する。
-token_cleansing %<>% mutate(term = str_jnormalize(term))
-
 # Corpus check
 viewTop5000(token_cleansing)
 
@@ -88,7 +90,7 @@ token_cleansing %<>%
               group_by(term) %>% 
               summarise(n = n()) %>% 
               arrange(term) %>% 
-              head(506) %>% 
+              head(407) %>% 
               dplyr::select(term), 
             by = "term")
 
