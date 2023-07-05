@@ -25,7 +25,7 @@ pacman::p_load(tidyverse,
 pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
-beta <- read_csv("data/lda-output-topic-term.csv")
+beta <- read_csv("data/lda-output-01_topic-term.csv")
 
 # Topic labelling--------------------------------------------------------------
 
@@ -76,8 +76,7 @@ for (i in 1:K) {
 }
 
 # Label topics-----------------------------------------------------------------
-
-topicList_table <- read_xlsx("table/TABLE_LDA-topic-term20.xlsx")
+topicList_table <- read_xlsx("table/table-lda-topic-term20.xlsx")
 topicList_table %>% 
   mutate(label_ja = "",
          label_en = "") %>% 

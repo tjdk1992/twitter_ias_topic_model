@@ -16,53 +16,56 @@ gc(); gc();
 # Packages
 pacman::p_load(tidyverse,   # for data manipulation
                topicmodels, # for LDA inference
+               magrittr,    # to overwrite data
                tidytext,    # to create document-term matrix
-               writexl      # to write excel sheet
+               writexl,      # to write excel sheet
+               readxl
                )
 
 # Data
-## Token
-tokens_finalized <- read_csv("data/tokens-05_rm-stpw-general.csv")
+tokens_finalized <- read_csv("data/tokens-06_rm-stpw-original.csv")
+
 ## Tweets
-tweet_finalizing <- read_csv("data/tweet-03_cleansed.csv")
+tweet_finalizing <- read_csv("data/tweet-04_cleansed.csv")
 
 # Document-term matrix---------------------------------------------------------
 
 # Remove tweets containing only 1 term
 tokens_finalized %<>% 
   anti_join(tokens_finalized %>% 
-              group_by(id_orig) %>% 
+              group_by(id_cleansed) %>% 
               summarise(n = n()) %>% 
               filter(n < 2) %>% 
-              dplyr::select(id_orig),
-            by = "id_orig")
+              dplyr::select(id_cleansed),
+            by = "id_cleansed")
 
 # Export tweets finally included for LDA inference
 tweet_finalizing %<>% 
-  arrange(id_orig) %>% 
+  arrange(id_cleansed) %>% 
   inner_join(tokens_finalized %>% 
-               dplyr::select(id_orig) %>% 
-               arrange(id_orig) %>% 
+               dplyr::select(id_cleansed) %>% 
+               arrange(id_cleansed) %>% 
                distinct(.keep_all = TRUE),
-             by = "id_orig")
+             by = "id_cleansed") %>% 
+  mutate(id_finalized = row_number())
 
 # Export final tweets
-write_csv(tweet_finalizing, "data/tweet-04_finalized.csv")
+write_csv(tweet_finalizing, "data/tweet-05_finalized.csv")
 
 # Create DTM
 dtm_finalized <- tokens_finalized %>% 
-  group_by(id_orig, term) %>% 
+  group_by(id_cleansed, term) %>% 
   summarise(count = n()) %>% 
   ungroup() %>% 
-  arrange(id_orig) %>% 
-  tidytext::cast_dtm(document = "id_orig",
+  arrange(id_cleansed) %>% 
+  tidytext::cast_dtm(document = "id_cleansed",
                      term = "term",
                      value = "count")
 
 # Inference LDA----------------------------------------------------------------
 
 # The number of topics
-K <- 30
+K <- 25
 
 # Model inference
 topicModel <- LDA(dtm_finalized,
@@ -108,7 +111,7 @@ topicList_table <- topicList_t %>%
                        V11, ", ", V12, ", ", V13, ", ", V14, ", ", V15, ", ",
                        V16, ", ", V17, ", ", V18, ", ", V19, ", ", V20)) %>%
   dplyr::select(topic, terms) %>% 
-  write_xlsx("table/TABLE_LDA-topic-term20.xlsx")
+  write_xlsx("table/table-lda-topic-term20.xlsx")
 
 # English version term list
 topicList %>% 
@@ -144,4 +147,4 @@ topicList_table <- topicList_t_en %>%
                        V11, ", ", V12, ", ", V13, ", ", V14, ", ", V15, ", ",
                        V16, ", ", V17, ", ", V18, ", ", V19, ", ", V20)) %>%
   dplyr::select(topic, terms) %>% 
-  write_xlsx("table/TABLE_LDA-topic-term20_en.xlsx")
+  write_xlsx("table/table-lda-topic-term20_en.xlsx")

@@ -16,7 +16,8 @@ gc(); gc();
 
 # Packages
 pacman::p_load(tidyverse,
-               writexl)
+               writexl,
+               readxl)
 
 # Color palette
 pal_orig <- c(rep(pals::cols25(25), 2))
@@ -33,7 +34,7 @@ token_ias <- read_csv("data/tokens-01_original.csv")
 ## 実際に分析に含まれたツイート数の取得
 len_tweet <- nrow(token_rm_stpw_original %>% 
                     distinct(.keep_all = TRUE) %>% 
-                    dplyr::select(id_orig) %>% 
+                    dplyr::select(id_cleansed) %>% 
                     distinct()) # *0.001
 
 # 分布はどんな感じ？
@@ -73,7 +74,7 @@ token_rm_stpw_original %>%
   mutate(freq_doc = freq / len_tweet * 100) %>% 
   filter(freq_doc > 0.1) %>%
   left_join(token_ias %>% 
-              dplyr::select(-id_orig) %>% 
+              dplyr::select(-id_cleansed) %>% 
               distinct(.keep_all = TRUE), by = "term") %>% 
   filter(hinshi == "名詞") %>% # 動詞と形容詞は自動でジャッジする
   mutate(judge = "") %>% 
@@ -89,11 +90,17 @@ stopword_noun_original %>%
   summarise(n = n()) %>% 
   as.data.frame()
 
-# Remove original stopword
-## Pattern I: prefecture + organism_lower + organism_middle + organism_upper
+# Pattern VXIII: lda-test-runの結果、決定
 token_rm_stpw_original %<>% 
   anti_join(stopword_noun_original %>% 
-              filter(!(is.na(judge))) %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       sub == "top" |
+                       judge == "place") %>% 
               dplyr::select(term),
             by = "term")
 

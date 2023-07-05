@@ -80,9 +80,9 @@ topic_proportion_per_year %>%
         axis.text.x = element_text(angle = 90))
 
 ## Save the visualized result
-ggsave("fig/Fig-S03_temporal-topic-trend.png",
+ggsave("fig/Fig_temporal-topic-trend.png",
        units = "mm", width = 174, height = 150)
-ggsave("submission/biodivers-conserv-1st/images/Fig-S03_temporal-topic-trend.eps", 
+ggsave("fig/Fig_temporal-topic-trend.eps", 
        units = "mm", width = 174, height = 150, device = cairo_ps)
 
 #------------------------------------------------------------------------------

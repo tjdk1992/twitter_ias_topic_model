@@ -159,3 +159,105 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
            file_name = "TP-list-rm-stpw-original-VII")
+
+## Pattern VIII: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
+
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VIII")
+
+## Pattern VIX: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
+
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VIX")
+
+## Pattern VX: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       sub == "top" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
+
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VX")
+
+## Pattern VXI: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
+
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VXI")
+
+## Pattern VXII: 
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
+
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VXII")
+
+## Pattern VXIII: 決定！
+dtm_rm_stpw_original <- token_rm_stpw_original %>% 
+  anti_join(stopword_noun_original %>% 
+              filter(judge == "general" |
+                       judge == "unclear" |
+                       sub == "searched" |
+                       sub == "lower" |
+                       sub == "middle" |
+                       sub == "upper" |
+                       sub == "top" |
+                       judge == "place") %>% 
+              dplyr::select(term),
+            by = "term") %>%
+  makeDTMatrix()
+
+runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
+           file_name = "TP-list-rm-stpw-original-VXIII")
