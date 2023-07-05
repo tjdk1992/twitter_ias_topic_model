@@ -4,7 +4,7 @@
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
-# This R script retrieve tweet data via twitter academic API.                 #
+# This R script retrieve tweet data via twitter academic API v2.              #
 #-----------------------------------------------------------------------------#
 
 # Setup -----------------------------------------------------------------------
@@ -56,4 +56,5 @@ tail(ias_ja) # ブラックバスで終わっているので最後まで取得�
 
 ## 以下のWarningが出ていた
 # Warning message:
-# Directory already exists. Existing JSON files may be parsed and returned, choose a new path if this is not intended. 
+# Directory already exists. Existing JSON files may be parsed and returned, 
+# choose a new path if this is not intended. 

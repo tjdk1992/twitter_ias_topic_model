@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 05-tweet-cleanse.R                                             #
+# Script Name: 06-tweet-cleanse.R                                             #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

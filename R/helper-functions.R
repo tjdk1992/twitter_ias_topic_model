@@ -1,17 +1,14 @@
 #-----------------------------------------------------------------------------#
-# Script Name: helper-functions                                               #
+# Script Name: helper-function.R.                                             #
+#                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
 # This R script contains helpful functions used in the series of analysis.    #
-#                                                                             #
 #-----------------------------------------------------------------------------#
 
-# Setup -----------------------------------------------------------------------
-library(tidyverse)
-
 #------------------------------------------------------------------------------
-# Function name: viewTop5000
+# Function name: viewTopTerm
 # Functioning: 
 # 
 # Inputs:
@@ -20,18 +17,18 @@ library(tidyverse)
 #
 #------------------------------------------------------------------------------
 
-viewTop5000 <- function(df_tokens) {
+viewTopTerm <- function(df_tokens, head = 5000) {
   df_tokens %>% 
     group_by(term) %>% 
     summarise(n = n()) %>% 
     arrange(term) %>% 
-    head(5000) %>% 
+    head(head) %>% 
     View()
 }
 
 
 #------------------------------------------------------------------------------
-# Function name: XXXXXX
+# Function name: makeDTMatrix
 # Functioning: 
 # 
 # Inputs:
@@ -45,6 +42,7 @@ makeDTMatrix <- function(df_tokens) {
     anti_join(df_tokens %>% 
                 group_by(id_cleansed) %>% 
                 summarise(n = n()) %>% 
+                # 単語が1個/1Tweetの場合は除外
                 filter(n == 1) %>% 
                 dplyr::select(id_cleansed),
               by = "id_cleansed") %>% 
@@ -56,8 +54,9 @@ makeDTMatrix <- function(df_tokens) {
                        value = "count")
 }
 
+
 #------------------------------------------------------------------------------
-# Function name: XXXXXX
+# Function name: runLDAtest
 # Functioning: 
 # 
 # Inputs:
@@ -98,8 +97,9 @@ runLDAtest <- function(dtm,
   }
 }
 
+
 #------------------------------------------------------------------------------
-# Function name: vizTopSpecieCt
+# Function name: vizTopIAS
 # Functioning: 
 # 
 # Inputs:
@@ -108,7 +108,7 @@ runLDAtest <- function(dtm,
 #
 #------------------------------------------------------------------------------
 
-vizTopSpecieCt = function(dat, biol, lang){
+vizTopIAS = function(dat, biol, lang){
   # 1:Mammal, 2:Bird, 3:Reptile, 4:Amphibian, 5:Fish,
   # 6.Invertebrate(insect), 7:Invertebrate(other), 8:Plant
   biol <- c("mammal", "bird", "reptile", "amphibian", "fish", 

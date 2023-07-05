@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 14-lda-test-run.R                                              #
+# Script Name: 15-lda-test-run.R                                              #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

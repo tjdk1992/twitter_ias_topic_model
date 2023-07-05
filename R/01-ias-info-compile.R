@@ -47,7 +47,5 @@ dat_ias_ja <- dat_ias_ja %>%
     reg2 = 外来生物法
     )
 
-# Save ------------------------------------------------------------------------
-
 # Write data
 write_csv(dat_ias_ja, "data/basic-ias-info.csv")

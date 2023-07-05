@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 06-tweet-tokenize.R                                            #
+# Script Name: 07-tweet-tokenize.R                                            #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

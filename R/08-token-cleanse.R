@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 07-token-cleanse.R                                             #
+# Script Name: 08-token-cleanse.R                                             #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

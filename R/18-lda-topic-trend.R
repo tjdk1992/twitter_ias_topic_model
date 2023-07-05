@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 17-lda-topic-trend.R                                           #
+# Script Name: 18-lda-topic-trend.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

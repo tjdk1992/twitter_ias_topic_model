@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 15-lda-model-infer.R                                           #
+# Script Name: 16-lda-model-infer.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 20-ias-count-test.R                                            #
+# Script Name: 22-ias-count-test.R                                            #
 #                                                                             #
--# Author: Daiki Tomojiri                                                      #
+# Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
 #                                                                             #
 # This R script statistically test difference of IAS occurrence among         #

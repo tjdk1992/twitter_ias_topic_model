@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 16-lda-topic-label.R                                           #
+# Script Name: 17-lda-topic-label.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

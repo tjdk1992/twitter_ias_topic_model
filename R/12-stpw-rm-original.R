@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 11-stpw-rm-original.R                                          #
+# Script Name: 12-stpw-rm-original.R                                          #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 04-tweet-screen.R                                              #
+# Script Name: 04-tweet-filter.R                                              #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

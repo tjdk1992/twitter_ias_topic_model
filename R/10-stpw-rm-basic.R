@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 09-stpw-rm-basic.R                                             #
+# Script Name: 10-stpw-rm-basic.R                                             #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 10-tweet-tokenize.R                                            #
+# Script Name: 11-stpw-rm-general.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

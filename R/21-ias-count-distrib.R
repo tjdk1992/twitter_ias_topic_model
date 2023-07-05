@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 20-ias-count-test.R                                            #
+# Script Name: 21-ias-count-distrib.R                                         #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

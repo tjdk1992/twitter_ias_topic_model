@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 21-lda-topic-trend.R                                           #
+# Script Name: 23-comprehensive-assessment.R                                  #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
