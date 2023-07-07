@@ -29,7 +29,6 @@ pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
 ias_count_total <- read_csv("data/ias-count_total.csv")
-ias_count_annual <- read_csv("data/ias-count_annual.csv")
 
 # -----------------------------------------------------------------------------
 
@@ -56,11 +55,9 @@ ggsave("fig/histogram_ias-count.png",
 # ggsave("/Fig-S01_ldatuning-output.eps", 
 #        units = "mm", width = 174, height = 150, device = cairo_ps)
 
-#------------------------------------------------------------------------------
+# Visualization of top-occurring IAS-------------------------------------------
 
-# 出現率上位の種の可視化
-
-## 全グループで集計した場合
+# 全グループで集計した場合
 ias_count_total %>%
   arrange(desc(count)) %>% 
   head(50) %>% 
@@ -82,7 +79,7 @@ ias_count_total %>%
         legend.key.size = unit(5, 'mm'),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"))
 
-## Save the visualized result
+# Save the visualized result
 ggsave("fig/bargraph_top-occurred-ias.png",
        units = "mm", width = 174, height = 150)
 # ggsave("submission/j-nat-conserv_1st/figs/Fig-05_top-occurred-ias.eps", 
@@ -90,39 +87,39 @@ ggsave("fig/bargraph_top-occurred-ias.png",
 
 # グループ別にプロット
 ## test the function
-vizTopSpecieCt(ias_count_total, 1, 2)
-vizTopSpecieCt(ias_count_total, 2, 2)
+vizTopIAS(ias_count_total, 1, 2)
+vizTopIAS(ias_count_total, 2, 2)
 
 ### 各グループのプロット
 for (i in 1:8) {
   nam <- paste("g", i, sep="")
-  assign(nam, vizTopSpecieCt(ias_count_total, i, 1))
+  assign(nam, vizTopIAS(ias_count_total, i, 1))
 }
 
-### 各プロットの保存
-for (i in 1:8) {
-  g <- eval(parse(text = str_c("g", i)))
-  path_save <- str_c("submission/j-nat-conserv_1st/figs/Fig-S04_", i,".eps")
-  ggsave(path_save,
-         plot = g,
-         units = "mm", width = 119, height = 80)
-}
+# # 各プロットの保存
+# for (i in 1:8) {
+#   g <- eval(parse(text = str_c("g", i)))
+#   path_save <- str_c("submission/j-nat-conserv_1st/figs/Fig-S04_", i,".eps")
+#   ggsave(path_save,
+#          plot = g,
+#          units = "mm", width = 119, height = 80)
+# }
 
-## Arrange multiple figures
+# Arrange multiple figures
 (g1_4 <- ggpubr::ggarrange(g1, g2, g3, g4, ncol = 2, nrow = 2))
 (g5_8 <- ggpubr::ggarrange(g5, g6, g7, g8, ncol = 2, nrow = 2))
 
-## Display the arranged figures (1-4)
+# Display the arranged figures (1-4)
 annotate_figure(g1_4, bottom = text_grob("Species", hjust = 1),
                 left = text_grob("No. of tweets (log transformed)", rot = 90))
-## Save the visualized result
+# Save the visualized result
 ggsave("fig/bargraph_top-occurred-ias-4group01.png",
        units = "mm", width = 174, height = 200)
 
-## Display the arranged figures (5-8)
+# Display the arranged figures (5-8)
 annotate_figure(g5_8, bottom = text_grob("Species", hjust = 1),
                 left = text_grob("No. of tweets (log transformed)", rot = 90))
-## Save the visualized result
+# Save the visualized result
 ggsave("fig/bargraph_top-occurred-ias-4group02.png",
        units = "mm", width = 174, height = 200)
 

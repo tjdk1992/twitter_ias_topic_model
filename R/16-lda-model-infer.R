@@ -80,7 +80,6 @@ topicModel <- LDA(dtm_finalized,
 
 # LDA outputs
 tmResult <- topicmodels::posterior(topicModel)
-str(tmResult)
 
 theta <- tmResult$topics
 beta <- tmResult$terms
@@ -91,10 +90,17 @@ write_csv(as_tibble(beta), "data/lda-output-01_topic-term.csv")
 ## topic-document distribution
 write_csv(as_tibble(theta), "data/lda-output-02_doc-topic.csv")
 ## topic-document distribution with tweet information
-theta %>% 
-  as_tibble() %>% 
-  cbind(tweet_finalizing) %>% 
-  write_csv("data/lda-output-03_doc-topic-tweet.csv")
+df_theta <- as.data.frame(theta)
+colnames(df_theta) <- c(str_c("TP", "0", seq(9)), str_c("TP", 10:25))
+df_theta %<>% 
+  mutate(topic = topics(topicModel)) %>% 
+  cbind(tweet_finalizing)
+df_theta %<>% 
+  mutate(topic = if_else(topic < 10, 
+                         str_c("TP0", topic),
+                         str_c("TP", topic)))
+## write
+write_csv(df_theta, "data/lda-output-03_doc-topic-tweet.csv")
 
 # Topic-term relation----------------------------------------------------------
 

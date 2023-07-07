@@ -32,7 +32,6 @@ pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
 ias_count_total <- read_csv("data/ias-count_total.csv")
-ias_count_annual <- read_csv("data/ias-count_annual.csv")
 
 # 多群の差の検定---------------------------------------------------------------
 
@@ -45,85 +44,83 @@ ias_count_total %<>%
             "vertebrate")))
 
 # 各グループにおける出現頻度の分布を見る
-## グループ間
-ias_count_total %>% 
-  ggplot(aes(x = log(count))) + 
-  geom_histogram(bins = 20) + 
-  facet_grid(. ~ group_biol) + 
-  theme_ipsum()
-
 ## カテゴリー間
 ias_count_total %>% 
-  ggplot(aes(x = log(count))) + 
+  ggplot(aes(x = count)) + 
   geom_histogram(bins = 20) + 
   facet_grid(. ~ category) + 
   theme_ipsum()
+## 生物グループ間
+ias_count_total %>% 
+  ggplot(aes(x = count)) + 
+  geom_histogram(bins = 20) + 
+  facet_wrap(. ~ group_biol, nrow = 2) + 
+  theme_ipsum()
+## 法的規制カテゴリー間
+ias_count_total %>% 
+  ggplot(aes(x = count)) + 
+  geom_histogram(bins = 20) + 
+  facet_grid(. ~ reg2) + 
+  theme_ipsum()
 
-## 対数変換してなお正規性を確認できないのでノンパラでやる。
-
+# 対数変換してなお正規性を確認できないのでノンパラでやる。
 # Kruskal-Wallis one-way analysis of variance test
 
 ## pattern 1.脊椎動物 vs 無脊椎動物 vs 植物
-kruskal.test(count ~ category, data = ias_count_total) # ぎりぎり有意
+kruskal.test(count ~ category, data = ias_count_total) # 有意差あり
 
 ## pattern 2.生物グループ間
-kruskal.test(count ~ group_biol, data = ias_count_total) # 有意
+kruskal.test(count ~ group_biol, data = ias_count_total) # 有意差あり
 
 ## pattern 3.法的指定
-kruskal.test(count ~ reg2, data = ias_count_total) # 有意
-
-## pattern 4.脊椎動物間
-ias_count_total_vertebrate <- filter(ias_count_total, category == "vertebrate")
-kruskal.test(count ~ group_biol, data = ias_count_total_vertebrate) # 有意
+kruskal.test(count ~ reg2, data = ias_count_total) # 有意差あり
 
 # 多重比較(multiple comparison)------------------------------------------------
 
-# Pattern 1は有意ではなかったので多重比較からは除外
+# Pattern 1. 脊椎動物 vs 無脊椎動物 vs 植物
 # Wilcox's multiple pairwise test
-## pattern 2.生物グループ間
-pwc_dunn_group <- ias_count_total %>% 
-  dunn_test(count ~ category, p.adjust.method = "bonferroni") 
-pwc_dunn_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
-# Dunnett's multiple pairwise test
 pwc_wilcox_group <- ias_count_total %>% 
   wilcox_test(count ~ category, p.adjust.method = "bonferroni") 
 pwc_wilcox_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
-
-## pattern 2.生物グループ間
-### Dunnett's test
+# Dunnett's multiple pairwise test
 pwc_dunn_group <- ias_count_total %>% 
-  dunn_test(count ~ group_biol, p.adjust.method = "bonferroni") 
+  dunn_test(count ~ category, p.adjust.method = "bonferroni") 
 pwc_dunn_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
-### Wilcox's test
+
+# pattern 2. 生物グループ間
+# Wilcox's multiple pairwise test
 pwc_wilcox_group <- ias_count_total %>% 
   wilcox_test(count ~ group_biol, p.adjust.method = "bonferroni") 
 pwc_wilcox_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
+# Dunnett's multiple pairwise test
+pwc_dunn_group <- ias_count_total %>% 
+  dunn_test(count ~ group_biol, p.adjust.method = "bonferroni") 
+pwc_dunn_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
 
-## pattern 3.法的指定
-### Dunnett's test
+# pattern 2.生物グループ間
+## Wilcox's test
+pwc_wilcox_group <- ias_count_total %>% 
+  wilcox_test(count ~ group_biol, p.adjust.method = "bonferroni") 
+pwc_wilcox_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
+## Dunnett's test
+pwc_dunn_group <- ias_count_total %>% 
+  dunn_test(count ~ group_biol, p.adjust.method = "bonferroni") 
+pwc_dunn_group %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
+
+# pattern 3.法的指定
+## Dunnett's test
 pwc_dunn_regulation <- ias_count_total %>% 
   dunn_test(count ~ reg2, p.adjust.method = "bonferroni") 
 filter(pwc_dunn_regulation, p.adj < 0.05) # 有意な組み合わせの抽出
-### Wilcox's test
+## Wilcox's test
 pwc_wilcox_regulation <- ias_count_total %>% 
   wilcox_test(count ~ reg2, p.adjust.method = "bonferroni") 
 pwc_wilcox_regulation %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
 
-## pattern 4.脊椎動物グループ間
-### Dunnett's test
-pwc_dunn_vertebrate <- ias_count_total_vertebrate %>% 
-  dunn_test(count ~ group_biol, p.adjust.method = "bonferroni") 
-pwc_dunn_vertebrate %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
-### Wilcox's test
-pwc_wilcox_vertebrate <- ias_count_total_vertebrate %>% 
-  wilcox_test(count ~ group_biol, p.adjust.method = "bonferroni") 
-pwc_wilcox_vertebrate %>% filter(p.adj < 0.05) # 有意な組み合わせの抽出
 
-#Visualize the results --------------------------------------------------------
+# Visualize the results of multiple-text --------------------------------------
 
-# 多重比較の結果を可視化
-
-## Pattern 1.の可視化（多群の差の検定は有意ではない）
+# Pattern 1.の可視化（多群の差の検定は有意ではない）
 ias_count_total %>% 
   ggplot(aes(x = category, y = log(count))) + 
   # ggplot(aes(x = category, y = count)) + # plot raw data
@@ -132,6 +129,16 @@ ias_count_total %>%
               size = 0.5, 
               show.legend = FALSE, 
               width = 0.3) +
+  # invertebrate-plant: 0.00063***
+  annotate("text", x = 1.5, y = 12.3, label = "0.002**") +
+  annotate("segment", x = 1, xend = 1, y = 12.5, yend = 12.8, linewidth = 0.3) +
+  annotate("segment", x = 1, xend = 2, y = 12.8, yend = 12.8, linewidth = 0.3) +
+  annotate("segment", x = 2, xend = 2, y = 12.5, yend = 12.8, linewidth = 0.3) +
+  # plant-vertebrate: 0.015*
+  annotate("text", x = 1.5, y = 12.3, label = "0.002**") +
+  annotate("segment", x = 2, xend = 2, y = 11.7, yend = 12.0, linewidth = 0.3) +
+  annotate("segment", x = 2, xend = 3, y = 12.0, yend = 12.0, linewidth = 0.3) +
+  annotate("segment", x = 3, xend = 3, y = 11.7, yend = 12.0, linewidth = 0.3) +
   # cols25かalphabet2のどちらかが良さそう。
   scale_color_manual(values = as.vector(cols25(18))) +
   labs(x = "Organism group", 
@@ -147,10 +154,10 @@ ias_count_total %>%
 ## Save the visualized result
 ggsave("fig/Fig-S05_boxplot-big-category.png",
        units = "mm", width = 174, height = 150)
-ggsave("submission/j-nat-conserv_1st/figs/Fig-S05_boxplot-big-category.eps", 
-       units = "mm", width = 174, height = 150, device = cairo_ps)
+# ggsave("submission/j-nat-conserv_1st/figs/Fig-S05_boxplot-big-category.eps", 
+#        units = "mm", width = 174, height = 150, device = cairo_ps)
 
-## pattern 2.の可視化
+# pattern 2.の可視化
 ias_count_total %>% 
   transform(group_biol = factor(
     group_biol, 
@@ -182,13 +189,13 @@ ias_count_total %>%
         plot.margin = margin(0.1,0.1,0.1,0.1, "cm")) +
   ylim(c(-0.1, 14))
 
-## Save the visualized result
+# Save the visualized result
 ggsave("fig/Fig-06_boxplot-biol-category.png",
        units = "mm", width = 174, height = 150)
-ggsave("submission/j-nat-conserv_1st/figs/Fig-06_boxplot-biol-category.eps", 
-       units = "mm", width = 174, height = 150, device = cairo_ps)
+# ggsave("submission/j-nat-conserv_1st/figs/Fig-06_boxplot-biol-category.eps", 
+#        units = "mm", width = 174, height = 150, device = cairo_ps)
 
-## pattern 3.の可視化
+# pattern 3.の可視化
 ias_count_total %>% 
   mutate(
     reg2 = if_else(reg2 == "特定", "特定外来生物", 
@@ -216,36 +223,3 @@ ias_count_total %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
         plot.margin = margin(0.1,0.1,0.1,0.1, "cm")) +  
   ylim(c(-0.1, 13.1))
-
-## pattern 4.の可視化
-ias_count_total_vertebrate %>% 
-  transform(group = factor(
-    group, 
-    levels = c("mammal", "bird", "reptile", "amphibian", "fish"))) %>% 
-  ggplot(aes(x = group, y = log(n))) + 
-  geom_boxplot() + 
-  geom_jitter(aes(color = group), size = 1, show.legend = FALSE, width = 0.3) +
-  scale_color_manual(values=as.vector(cols25(18))) + # cols25かalphabet2のどちらかが良さそう。
-  # mammal-bird: <0.001***
-  annotate("text", x = 1.5, y = 12.3, label = "< 0.001***") +
-  annotate("segment", x = 1, xend = 1, y = 11.7, yend = 12.0, linewidth = 0.5) +
-  annotate("segment", x = 1, xend = 2, y = 12.0, yend = 12.0, linewidth = 0.5) +
-  annotate("segment", x = 2, xend = 2, y = 11.7, yend = 12.0, linewidth = 0.5) +
-  # mammal-fish: <0.002*
-  annotate("text", x = 3, y = 13.1, label = "< 0.002*") +
-  annotate("segment", x = 1, xend = 1, y = 12.5, yend = 12.8, linewidth = 0.5) +
-  annotate("segment", x = 1, xend = 5, y = 12.8, yend = 12.8, linewidth = 0.5) +
-  annotate("segment", x = 5, xend = 5, y = 12.5, yend = 12.8, linewidth = 0.5) +
-  # 調整
-  labs(x = "Vertebrate group", y = "No. of tweets (log transformed)") +
-  theme_ipsum(base_family = "HiraKakuPro-W3", base_size = 8, axis_text_size = 8, 
-              axis_title_size = 12, axis_title_just = "mc") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        plot.margin = margin(0.1,0.1,0.1,0.1, "cm")) +  
-  ylim(c(-0.1, 13.1))
-
-## Save the visualized result
-ggsave("fig/Fig-S06_boxplot-vertebrate-category.png",
-       units = "mm", width = 174, height = 150)
-ggsave("submission/j-nat-conserv_1st/figs/Fig-S06_boxplot-vertebrate-category.eps", 
-       units = "mm", width = 174, height = 150, device = cairo_ps)
