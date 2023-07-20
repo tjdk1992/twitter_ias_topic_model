@@ -14,12 +14,12 @@ rm(list = ls())
 gc(); gc();
 
 # Package
-pacman::p_load(tidyverse,      # for data manipulation
-               academictwitteR # for handling twitter
+pacman::p_load(tidyverse,       # for data manipulation
+               academictwitteR  # for handling twitter
                )
 
 # Data
-dat_ias_ja <- read_csv("data/basic-ias-info.csv") # 探索する外来生物のリスト
+dat_ias_ja <- read_csv("data/basic-ias-info.csv")
 
 # Retrieve tweets -------------------------------------------------------------
 
@@ -50,11 +50,3 @@ for (i in 1:length(ias_ja)) {
                    n = 1000000) # 本番は10,000,000
   list_ias_tweet[[i]] <- tweet_ias
 }
-
-# Check the last 5 IAS in the looped query
-tail(ias_ja) # ブラックバスで終わっているので最後まで取得できていると判断
-
-## 以下のWarningが出ていた
-# Warning message:
-# Directory already exists. Existing JSON files may be parsed and returned, 
-# choose a new path if this is not intended. 

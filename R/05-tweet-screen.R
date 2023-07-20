@@ -27,6 +27,9 @@ dat_ias_ja <- read_csv("data/basic-ias-info.csv")
 
 # 検索ワード-------------------------------------------------------------------
 
+# 目視で確認
+pull(sample_n(tweet_screening, 1000), text)
+
 # 外来生物名
 ias_ja <- dat_ias_ja %>% 
   mutate(n_chr = nchar(KATAKANA)) %>% 
@@ -58,11 +61,6 @@ for (i in 1:length(term_extract)) {
 # Remove duplicate
 tweet_searched %<>% 
   distinct(id_filtered, .keep_all = TRUE)
-
-# チェック
-tweet_searched %>% 
-  filter(str_detect(text, "在日")) %>% 
-  pull(text)
 
 # Export data
 tweet_searched %>% 

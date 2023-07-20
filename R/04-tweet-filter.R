@@ -46,8 +46,7 @@ filter(tweet_filtering, is.na(name_sp)) # OK
 
 # Select necessary columns
 tweet_filtering %<>% 
-  transmute(id_raw,
-            tweet_id = id, 
+  transmute(tweet_id = id, 
             author_id, 
             type,
             lang,

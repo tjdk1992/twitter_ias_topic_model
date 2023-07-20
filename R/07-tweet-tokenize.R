@@ -34,12 +34,12 @@ list_token_ias <- RMeCabDF(tweet_tokenizing, "text", 1)
 
 # Convert list of token into data frame
 token_ias <- purrr::pmap_df(list(nv = list_token_ias,
-                                 title = tweet_tokenizing$id),
+                                 title = tweet_tokenizing$id_cleansed),
                             function(nv, title){
                               tibble(id_cleansed = title,
                                      term = nv,
                                      hinshi = names(nv))
                             })
 
-# 形態素解析から得られたトークンの書き出し
+# Export tokens
 write_csv(token_ias, "data/tokens-01_original.csv")

@@ -39,7 +39,7 @@ dtm_rm_stpw_original <- tokens_rm_stpw_original %>%
   anti_join(tokens_rm_stpw_original %>% 
               group_by(id_cleansed) %>% 
               summarise(n = n()) %>% 
-              filter(n == 1) %>% 
+              filter(n < 5) %>% 
               dplyr::select(id_cleansed),
             by = "id_cleansed") %>% 
   group_by(id_cleansed, term) %>% 
@@ -60,13 +60,17 @@ for (K in seq(10, 60, by = 5)) {
                                    iter = 1000, 
                                    verbose = 25, 
                                    seed = 123))
-  name_path <- str_c("data-manual/lda-manual-tuning/TP-manual-tuning-K", K,".csv")
+  name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K", 
+                     K,
+                     ".xlsx")
   as.data.frame(terms(topicModel, 20)) %>% 
-    write_csv(name_path)
+    writexl::write_xlsx(name_path)
 }
 
+#------------------------------------------------------------------------------
+
 # ldatuningの結果を踏まえて10〜60 BY 10でトピックを推定してみる。
-for (K in seq(21, 29, by = 1)) {
+for (K in seq(15, 35, 2)) {
   topicModel <- LDA(dtm_rm_stpw_original,
                     k = K,
                     method = "Gibbs",
@@ -74,21 +78,47 @@ for (K in seq(21, 29, by = 1)) {
                                    iter = 1000, 
                                    verbose = 25, 
                                    seed = 123))
-  name_path <- str_c("data-manual/lda-manual-tuning/TP-manual-tuning-K", K,".csv")
+  name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K", 
+                     K,
+                     ".xlsx")
   as.data.frame(terms(topicModel, 20)) %>% 
-    write_csv(name_path)
+    writexl::write_xlsx(name_path)
 }
 
-# K = 30で乱数を変える。
-for (rn in c(123, 135, 159, 246, 369, 111, 222, 333, 444, 555)) {
-  topicModel <- LDA(dtm_rm_stopword,
-                    k = 30,
+#------------------------------------------------------------------------------
+
+# ldatuningの結果を踏まえて10〜60 BY 10でトピックを推定してみる。
+for (K in seq(15, 35, 2)) {
+  topicModel <- LDA(dtm_rm_stpw_original,
+                    k = K,
                     method = "Gibbs",
-                    control = list(alpha = 1, 
+                    control = list(alpha = 50/K, 
                                    iter = 1000, 
                                    verbose = 25, 
-                                   seed = rn))
-  name_path <- str_c("data-manual/lda-manual-tuning/TP-manual-tuning-K25_seed", rn,".csv")
+                                   seed = 123))
+  name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K",
+                     K,
+                     ".xlsx")
   as.data.frame(terms(topicModel, 20)) %>% 
-    write_csv(name_path)
+    writexl::write_xlsx(name_path)
 }
+
+# K = 25で決定
+#------------------------------------------------------------------------------
+
+K = 25
+
+for (rn in c(123, 135, 159, 246, 369)) {
+    topicModel <- LDA(dtm_rm_stpw_original,
+                      k = K,
+                      method = "Gibbs",
+                      control = list(alpha = 50/K, 
+                                     iter = 1000, 
+                                     verbose = 25, 
+                                     seed = rn))
+    name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K25_seed", 
+                       rn,
+                       ".xlsx")
+    as.data.frame(terms(topicModel, 20)) %>% 
+      writexl::write_xlsx(name_path)
+  }

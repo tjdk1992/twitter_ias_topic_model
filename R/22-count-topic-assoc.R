@@ -18,8 +18,9 @@ gc(); gc();
 pacman::p_load(tidyverse,  # for data manipulation
                hrbrthemes, # for nice visualization
                magrittr, 　# for data manipulation
-               pals　　　　# to use color palette
-               )
+               pals,
+               patchwork# to use color palette
+)
 
 # Color palette
 pal_orig <- c(rep(pals::cols25(25), 2))
@@ -36,14 +37,15 @@ tweet_count_total <- read_csv("data/ias-count_total.csv")
 
 # Summarize LDA posterior by species
 ## Pattern 1: Probability of topics
-theta_prob <- theta %>% 
+theta_topic <- theta %>%
+  dplyr::select(-topic) %>% 
   pivot_longer(cols = TP01:TP25,
-               names_to = "no_topic", 
-               values_to = "prob") %>% 
-  group_by(name_sp, no_topic) %>% 
-  summarise(prob = mean(prob)) %>% 
-  ungroup() %>% 
-  pivot_wider(names_from = no_topic, 
+               names_to = "topic",
+               values_to = "prob") %>%
+  group_by(name_sp, topic) %>%
+  summarise(prob = mean(prob)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = topic,
               values_from = prob)
 ## Pattern 2: Count of document aligned given topics
 N_doc <- theta %>% 
@@ -54,101 +56,226 @@ theta_topic <- theta %>%
   summarise(n = n()) %>% 
   left_join(N_doc, by = "name_sp") %>% 
   mutate(freq = n / n_doc) %>% 
+  dplyr::select(name_sp, topic, freq) %>% 
   ungroup() %>% 
+  arrange(topic) %>% 
   pivot_wider(names_from = topic, values_from = freq)
 theta_topic[is.na(theta_topic)] <- 0
 
 # Merge count data to LDA output
-theta_prob_count <- inner_join(tweet_count_total, theta_prob, by = "name_sp")
-theta_topic_count <- inner_join(tweet_count_total, theta_topic, by = "name_sp")
+theta_topic <- inner_join(tweet_count_total, theta_topic, by = "name_sp")
 
-# 階層クラスタリング-----------------------------------------------------------
+# Association visualization ---------------------------------------------------
 
-# クラスタリング用のデータフレーム
-df_clust_theta_prob <- theta_prob_count %>% 
-  dplyr::select(TP01:TP25) %>% 
-  as.data.frame()
-df_clust_theta_topic <- theta_topic_count %>% 
-  dplyr::select(TP01:TP25) %>% 
-  as.data.frame()
+g_bubble_topic <- theta_topic %>% 
+  arrange(desc(count)) %>% 
+  group_by(group_biol) %>% 
+  mutate(rank_group = row_number()) %>% 
+  ungroup() %>% 
+  filter(rank_group <= 7) %>% 
+  arrange(count) %>% 
+  arrange(group_biol) %>% 
+  mutate(id_reorder = row_number()) %>% 
+  pivot_longer(cols = TP01:TP25, 
+               names_to = "topic", 
+               values_to = "value") %>% 
+  ggplot(aes(x = topic, y = reorder(name_ja, id_reorder), label = group_biol)) +
+  geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
+  scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
+  scale_x_discrete(position = "top") +
+  theme_ipsum(base_family = "HiraKakuPro-W3",
+              base_size = 8) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"))
 
-df_clust_theta_prob <- scale(df_clust_theta_prob)
-df_clust_theta_topic <- scale(df_clust_theta_topic)
+g_bar_rank <- theta_topic %>% 
+  arrange(desc(count)) %>% 
+  group_by(group_biol) %>% 
+  mutate(rank_group = row_number()) %>% 
+  ungroup() %>% 
+  filter(rank_group <= 7) %>% 
+  arrange(count) %>% 
+  arrange(group_biol) %>% 
+  mutate(id_reorder = row_number()) %>% 
+  ggplot() + 
+  geom_bar(aes(x = reorder(name_ja, id_reorder), 
+               y = count, 
+               fill = group_biol), 
+           stat = "identity",
+           show.legend = FALSE) +
+  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = count, hjust = -0.2), size = 3) +
+  scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  labs(x = "Species", 
+       y = "No. of tweets") +
+  theme_ipsum(base_family = "HiraKakuPro-W3", 
+              base_size = 8, 
+              axis_text_size = 8,
+              axis_title_size = 10,
+              axis_title_just = "mc") + 
+  theme(axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
+  coord_flip()
 
-rownames(df_clust_theta_prob) <- theta_prob_count$name_sp
-rownames(df_clust_theta_topic) <- theta_topic_count$name_sp
+g_bubble_topic + 
+  g_bar_rank + 
+  plot_layout(guides = "collect", widths = c(5, 1)) & 
+  theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
 
-# ユークリッド距離の計算
-dist_theta_prob <- dist(df_clust_theta_prob)
-dist_theta_topic <- dist(df_clust_theta_topic)
+# Association visualization ---------------------------------------------------
+H = 75
+g_bubble_topic2 <- theta_topic %>% 
+  arrange(desc(count)) %>% 
+  head(H) %>% 
+  arrange(count) %>% 
+  mutate(id_reorder = row_number()) %>% 
+  pivot_longer(cols = TP01:TP25, 
+               names_to = "topic", 
+               values_to = "value") %>% 
+  ggplot(aes(x = topic, y = reorder(name_ja, id_reorder), label = group_biol)) +
+  geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
+  scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
+  theme_ipsum(base_family = "HiraKakuPro-W3",
+              base_size = 8) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
+  scale_x_discrete(position = "top")
 
-# 階層クラスタリングの実装
-rc_prob = hclust(d = dist_theta_prob, method = "ward.D2")
-rc_topic = hclust(d = dist_theta_topic, method = "ward.D2")
+g_bar_rank2 <- theta_topic %>% 
+  arrange(desc(count)) %>% 
+  head(H) %>%  
+  arrange(count) %>% 
+  mutate(id_reorder = row_number()) %>% 
+  ggplot() + 
+  geom_bar(aes(x = reorder(name_ja, id_reorder), 
+               y = count, 
+               fill = group_biol), 
+           stat = "identity",
+           show.legend = FALSE) +
+  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = count, hjust = -0.2), size = 3) +
+  scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  labs(x = "Species", 
+       y = "No. of tweets") +
+  theme_ipsum(base_family = "HiraKakuPro-W3", 
+              base_size = 8, 
+              axis_text_size = 8,
+              axis_title_size = 10,
+              axis_title_just = "mc") + 
+  theme(axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
+  coord_flip()
 
-# デンドログラムのチェック
-plot(rc_prob)
-plot(rc_topic)
+g_bubble_topic2 + 
+  g_bar_rank2 + 
+  plot_layout(guides = "collect", widths = c(5, 1)) & 
+  theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
 
-# 各クラスタに振り分けられたのIASの数
-for (i in 2:10) {
-  print(table(cutree(rc, k = i)))
-}
+# Association visualization ---------------------------------------------------
 
-# k = 4か5が妥当そう…
-theta_count$k4 <- cutree(rc, k = 4)
-theta_count$k5 <- cutree(rc, k = 5)
+sp = "reptile"
+g_bubble_topic3 <- theta_topic %>% 
+  filter(group_biol == sp) %>% 
+  arrange(count) %>% 
+  mutate(id_reorder = row_number()) %>% 
+  pivot_longer(cols = TP01:TP25, 
+               names_to = "topic", 
+               values_to = "value") %>% 
+  ggplot(aes(x = topic, y = reorder(name_ja, id_reorder), label = group_biol)) +
+  geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
+  scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
+  theme_ipsum(base_family = "HiraKakuPro-W3",
+              base_size = 8) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
+  scale_x_discrete(position = "top")
 
-theta_count %>% 
-  ggplot(aes(y = log(count))) +
-  geom_boxplot(aes(x = as.factor(k5))) +
+g_bar_rank3 <- theta_topic %>% 
+  filter(group_biol == sp) %>% 
+  arrange(count) %>% 
+  mutate(id_reorder = row_number()) %>% 
+  ggplot() + 
+  geom_bar(aes(x = reorder(name_ja, id_reorder), 
+               y = count, 
+               fill = group_biol), 
+           stat = "identity",
+           show.legend = FALSE) +
+  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = count, hjust = -0.2), size = 3) +
+  scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  labs(x = "Species", 
+       y = "No. of tweets") +
+  theme_ipsum(base_family = "HiraKakuPro-W3", 
+              base_size = 8, 
+              axis_text_size = 8,
+              axis_title_size = 10,
+              axis_title_just = "mc") + 
+  theme(axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
+  coord_flip()
+
+g_bubble_topic3 + g_bar_rank3 + plot_layout(guides = "collect", widths = c(5, 1)) # 縦横比を設定し凡例をまとめ
+
+# Hierarchical clustering -----------------------------------------------------
+library(vegan)
+# あああ
+df_clust <- dplyr::select(theta_topic, TP01:TP25)
+dist_ias <- vegdist(df_clust, method = "bray")
+res_clust <- hclust(dist_ias, method = "ward.D2")
+plot(res_clust)
+
+rect.hclust(res_clust, 3, border = "red")
+rect.hclust(res_clust, 4, border = "blue")
+rect.hclust(res_clust, 5, border = "green")
+
+theta_topic_clust <- theta_topic %>% 
+  mutate(k3 = cutree(res_clust, 3),
+         k4 = cutree(res_clust, 4),
+         k5 = cutree(res_clust, 5))
+
+theta_topic_clust %>% 
+  pivot_longer(cols = c(k3, k4, k5),
+               names_to = "k",
+               values_to = "clust") %>% 
+  ggplot() +
+  geom_boxplot(aes(x = clust, y = log(count), group = clust)) +
+  facet_wrap(. ~ k) +
   theme_ipsum()
 
-theta_count %>% 
-  pivot_longer(cols = TP01:TP25, 
-               names_to = "topic", values_to = "prob") %>% 
-  group_by(k5, topic) %>% 
-  summarise(prob = mean(prob)) %>% 
-  ggplot() +
-  geom_tile(aes(x = k5, y = topic, fill = prob)) +
-  scale_fill_gradient2(low = cols25(25)[1], 
-                       mid = cols25(25)[21], 
-                       high = cols25(25)[2], 
-                       midpoint = 0.06)
-  # scale_fill_viridis_c()
+theta_topic_clust %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, k4) %>% 
+  summarise(mean_freq = mean(freq)) %>% 
+  ggplot(aes(x = k4, y = mean_freq, fill = topic)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_manual(values = pal_orig) +
+  theme_ipsum()
 
-# Statistical modelling--------------------------------------------------------
+# エントロピー算出
+# https://bi.biopapyrus.jp/seq/entropy.html
+pre_calc_entropy <- theta_topic_clust %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, k4) %>% 
+  summarise(mean_freq = mean(freq)) %>% 
+  ungroup()
 
-# データの分布
-theta_count %>% 
-  ggplot() +
-  geom_histogram(aes(x = count))
+pre_calc_entropy$ln.prob <- log(pre_calc_entropy$mean_freq)
+pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq*pre_calc_entropy$ln.prob
+cluster_entropy <- pre_calc_entropy %>% 
+  group_by(k4) %>% 
+  summarise(entropy = sum(pre.ent)*(-1))
 
-# 傾向の把握
-theta_count %>% 
-  pivot_longer(cols = TP01:TP25, 
-               names_to = "topic", values_to = "prob") %>% 
-  ggplot() +
-  geom_tile(aes(x = topic, 
-                y = reorder(name_sp, count), 
-                fill = prob)) +
-  scale_fill_gradient2(low = cols25(25)[1], 
-                       mid = cols25(25)[21], 
-                       high = cols25(25)[2], 
-                       midpoint = 0.13)
+cluster_entropy %>% 
+  ggplot(aes(x = k4, y = entropy)) +
+  geom_bar(stat = "identity") + 
+  theme_ipsum(base_size = 8, axis_title_size = 12) +
+  labs(x="Country", y="Entropy") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-# 負の二項分布（グループも説明変数に入れて解析）
-mod_nb <- MASS::glm.nb(count ~ 
-                         TP01 + TP02 + TP03 + TP04 + TP05 + 
-                         TP06 + TP07 + TP08 + TP09 + TP10 +
-                         TP11 + TP12 + TP13 + TP14 + TP15 +
-                         TP16 + TP17 + TP18 + TP19 + TP20 +
-                         TP21 + TP22 + TP23 + TP24 + TP25, 
-                     data = theta_count)
-summary(mod_nb)
-
-# MuMInパッケージを用いた総当たり法によるモデル選択
-library(MuMIn)
-options(na.action = "na.fail")
-res.AIC <- dredge(mod_nb, rank="AIC")
-res.AIC

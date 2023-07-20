@@ -29,18 +29,16 @@ theta <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
 
 # Topic distribution in whole text data
 theta %>% 
-  pivot_longer(cols = TP01:TP25,
-               names_to = "no_topic",
-               values_to = "prob") %>% 
-  group_by(no_topic) %>% 
-  summarise(sum = sum(prob)) %>% 
-  ggplot(aes(x = reorder(no_topic, as.numeric(no_topic)), y = sum)) +
+  group_by(topic) %>% 
+  summarise(n = n()) %>% 
+  ggplot(aes(x = reorder(topic, as.numeric(str_remove_all(topic, "TP"))), y = n)) +
   geom_bar(stat = "identity", fill = pal_orig[1]) +
-  labs(x = "Topic", y = "Posterior probability") +
+  labs(x = "Topic", y = "The number of tweets") +
   theme_ipsum(axis_text_size = 12,
               axis_title_size = 12,
               axis_title_just = "center",
-              base_family = "Helvetica")
+              base_family = "Helvetica") +
+  theme(axis.text.x = element_text(angle = 90))
 
 # Time series trends ----------------------------------------------------------
 

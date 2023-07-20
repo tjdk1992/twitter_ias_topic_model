@@ -61,14 +61,8 @@ token_cleansing %<>%
 token_cleansing %<>% 
   mutate(term = stri_trans_general(term, "Halfwidth-Fullwidth"))
 
-# コーパスのチェック①（出現頻度順で上位5000単語をチェック）
-viewTop5000(token_cleansing)
-
 # 先頭が"ー"のものを削除
 token_cleansing %<>% mutate(term = str_replace_all(term, "^ー*", ""))
-
-# Corpus check
-viewTop5000(token_cleansing)
 
 # Manual cleaning (transformative) --------------------------------------------
 
@@ -81,9 +75,6 @@ token_cleansing %<>%
               dplyr::select(term),
             by = "term")
 
-# Corpus check
-viewTop5000(token_cleansing)
-
 ## 記号は意味の解釈が困難なので除外
 token_cleansing %<>% 
   anti_join(token_cleansing %>% 
@@ -93,9 +84,6 @@ token_cleansing %<>%
               head(407) %>% 
               dplyr::select(term), 
             by = "term")
-
-## コーパスのチェック③
-viewTop5000(token_cleansing)
 
 ## 漢字以外の1文字のtermは除外する。
 # all type of kana
@@ -114,9 +102,6 @@ for (i in 1:length(kana_all)) {
     filter(term != kana_all[i])
 }
 
-# コーパスのチェック
-viewTop5000(token_cleansing)
-
 # 繰り返しは鳴き声だったりして意味がないので除外
 # チェック
 filter(token_cleansing, str_detect(term, "(.)\\1{2,}")) %>% pull(term)
@@ -130,9 +115,6 @@ token_cleansing %<>%
   filter(!(str_detect(term, "(..)\\1{2,}"))) %>%
   filter(!(str_detect(term, "(...)\\1{2,}"))) %>%
   filter(!(str_detect(term, "(....)\\1{2,}")))
-
-# コーパスのチェック④
-viewTop5000(token_cleansing)
 
 # クリーニングが完了したデータを書き出し
 write_csv(token_cleansing, "data/tokens-02_cleansed.csv")

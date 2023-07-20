@@ -26,7 +26,7 @@ token_rm_stpw_basic <- read_csv("data/tokens-04_rm-stpw-basic.csv")
 # Automatic original stopword selection ---------------------------------------
 
 # My general stopwords
-stopword_test_tokens <- read_csv("~/Dropbox/02_Research/01_Project/01_Lead/twitter_invasion_culturomics/data/df-id-tokens-general-tweet.csv")
+stopword_test_tokens <- read_csv("~/Dropbox/02_Research/01_Project/04_Suspend/01_Lead/twitter_invasion_culturomics/data/df-id-tokens-general-tweet.csv")
 
 # 動詞・形容詞のストップワードの作成
 

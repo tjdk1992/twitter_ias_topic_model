@@ -21,7 +21,8 @@ pacman::p_load(tidyverse,
                ldatuning,
                pals,
                hrbrthemes,
-               tictoc)
+               tictoc
+               )
 
 # Data
 tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
@@ -33,7 +34,7 @@ dtm_rm_stpw_original <- tokens_rm_stpw_original %>%
   anti_join(tokens_rm_stpw_original %>% 
               group_by(id_cleansed) %>% 
               summarise(n = n()) %>% 
-              filter(n == 1) %>% 
+              filter(n < 5) %>% 
               dplyr::select(id_cleansed),
             by = "id_cleansed") %>% 
   group_by(id_cleansed, term) %>% 

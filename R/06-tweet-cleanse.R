@@ -30,9 +30,11 @@ ias_ja <- read_csv("data/basic-ias-info.csv")
 
 # Select necessary columns
 tweet_cleansing %<>% 
-  dplyr::select(id_raw, id_screened,
-                name_ja, name_sp,
-                date, year, 
+  dplyr::select(id_screened,
+                name_ja, 
+                name_sp,
+                date, 
+                year, 
                 text)
 
 # 扱いやすくするために可能なものは半角にしてスペースは除外する。

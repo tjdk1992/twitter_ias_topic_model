@@ -76,9 +76,14 @@ for (i in 1:K) {
 }
 
 # Label topics-----------------------------------------------------------------
+
 topicList_table <- read_xlsx("table/table-lda-topic-term20.xlsx")
 topicList_table %>% 
   mutate(label_ja = "",
-         label_en = "") %>% 
-  dplyr::select(topic, label_ja, label_en, terms) %>% 
+         label_en = "",
+         category = "") %>% 
+  dplyr::select(topic, category, label_ja, label_en, terms) %>% 
   write_xlsx("data-manual/table-topic-labelling.xlsx")
+
+# Check
+topicList_table <- read_excel("data-manual/table-topic-labelled.xlsx")

@@ -16,11 +16,9 @@ gc(); gc();
 
 # Packages
 pacman::p_load(tidyverse,
+               magrittr,
                writexl,
                readxl)
-
-# Color palette
-pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
 token_rm_stpw_original <- read_csv("data/tokens-05_rm-stpw-general.csv")
@@ -103,6 +101,15 @@ token_rm_stpw_original %<>%
                        judge == "place") %>% 
               dplyr::select(term),
             by = "term")
+
+# プラスアルファの試行錯誤
+token_rm_stpw_original %<>% 
+  filter(term != "今日") %>% 
+  filter(term != "昨日") %>% 
+  filter(term != "明日") %>% 
+  filter(term != "本日") %>% 
+  filter(term != "笑") %>% 
+  filter(term != "もも") # 〜も〜も
 
 # データの書き出し
 write_csv(token_rm_stpw_original, "data/tokens-06_rm-stpw-original.csv")

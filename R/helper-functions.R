@@ -43,7 +43,7 @@ makeDTMatrix <- function(df_tokens) {
                 group_by(id_cleansed) %>% 
                 summarise(n = n()) %>% 
                 # 単語が1個/1Tweetの場合は除外
-                filter(n == 1) %>% 
+                filter(n < 5) %>% 
                 dplyr::select(id_cleansed),
               by = "id_cleansed") %>% 
     group_by(id_cleansed, term) %>% 

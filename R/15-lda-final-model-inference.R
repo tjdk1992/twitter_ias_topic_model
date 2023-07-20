@@ -20,13 +20,47 @@ pacman::p_load(tidyverse,   # for data manipulation
                tidytext,    # to create document-term matrix
                writexl,      # to write excel sheet
                readxl
-               )
+)
 
 # Data
+## Tokens
 tokens_finalized <- read_csv("data/tokens-06_rm-stpw-original.csv")
 
 ## Tweets
 tweet_finalizing <- read_csv("data/tweet-04_cleansed.csv")
+
+#------------------------------------------------------------------------------
+
+# Check the IAS occurrence difference
+
+# 元の数
+count_original <- tweet_finalizing %>% 
+  group_by(name_sp) %>% 
+  summarise(n_original = n()) %>% 
+  arrange(n_original)
+
+# 単語数が足りなかったTweetの削除後
+count_filtered <- tweet_finalizing %>% 
+  inner_join(tokens_finalized %>% 
+               anti_join(tokens_finalized %>% 
+                           group_by(id_cleansed) %>% 
+                           summarise(n = n()) %>% 
+                           filter(n < 5) %>% 
+                           dplyr::select(id_cleansed),
+                         by = "id_cleansed") %>% 
+               distinct(id_cleansed, .keep_all = FALSE),
+             by = "id_cleansed") %>% 
+  group_by(name_sp) %>% 
+  summarise(n_filtered = n()) %>% 
+  arrange(n_filtered)
+
+count_test <- count_original %>% 
+  left_join(count_filtered, by = "name_sp") %>% 
+  na.omit()
+
+# 相関図と相関係数
+plot(count_test$n_original, count_test$n_filtered)
+cor(count_test$n_original, count_test$n_filtered)
 
 # Document-term matrix---------------------------------------------------------
 
@@ -35,9 +69,13 @@ tokens_finalized %<>%
   anti_join(tokens_finalized %>% 
               group_by(id_cleansed) %>% 
               summarise(n = n()) %>% 
-              filter(n < 2) %>% 
+              filter(n < 5) %>% 
               dplyr::select(id_cleansed),
             by = "id_cleansed")
+
+tokens_finalized %>% 
+  dplyr::select(id_cleansed) %>% 
+  distinct()
 
 # Export tweets finally included for LDA inference
 tweet_finalizing %<>% 
@@ -154,3 +192,65 @@ topicList_table <- topicList_t_en %>%
                        V16, ", ", V17, ", ", V18, ", ", V19, ", ", V20)) %>%
   dplyr::select(topic, terms) %>% 
   write_xlsx("table/table-lda-topic-term20_en.xlsx")
+
+# Validation-------------------------------------------------------------------
+
+# Data
+theta <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
+
+set.seed(123)
+val_test <- theta %>% 
+  sample_n(10) %>% 
+  dplyr::select(id_cleansed, name_ja, text)
+
+dat_test <- theta %>% 
+  inner_join(val_test %>% 
+               dplyr::select(id_cleansed), 
+             by = "id_cleansed")
+
+dat_test %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "no_topic",
+               values_to = "prob") %>% 
+  group_by(no_topic, id_cleansed) %>% 
+  summarise(prob_mean = mean(prob)) %>% 
+  ggplot(aes(x = no_topic, y = prob_mean)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(. ~ id_cleansed, ncol = 2) +
+  theme_ipsum(base_family = "HiraKakuPro-W3") +
+  theme(axis.text.x = element_text(angle = 90))
+
+View(val_test)
+
+dat_test %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "no_topic",
+               values_to = "prob") %>% 
+  group_by(no_topic, id_cleansed) %>% 
+  summarise(prob_mean = mean(prob)) %>% 
+  filter(id_cleansed == 261503) %>% 
+  group_by(prob_mean) %>% 
+  summarise(n = n())
+
+theta %>% 
+  sample_n(100) %>% 
+  dplyr::select(id_cleansed, name_ja, topic, text) %>% 
+  write_xlsx("test.xlsx")
+
+theta %>% 
+  dplyr::select(-topic) %>% 
+  filter(id_cleansed == 223062) %>% 
+  pivot_longer(TP01:TP25, names_to = "topic", values_to = "prob") %>% 
+  group_by(prob) %>% 
+  summarise(n = n())
+
+theta %>% 
+  filter(id_cleansed == 223062) %>% 
+  pull(text)
+theta %>% 
+  dplyr::select(-topic) %>% 
+  filter(id_cleansed == 223062) %>% 
+  pivot_longer(TP01:TP25, names_to = "topic", values_to = "prob") %>% 
+  arrange(desc(prob))
+  group_by(prob) %>% 
+  summarise(n = n())
