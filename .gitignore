@@ -54,6 +54,9 @@ twitter_ias_topic_model.Rproj
 # My Directories
 data/
 data-raw/
+data-manual/
 product/
 resource/
 submission/
+fig/
+fig-manual/
