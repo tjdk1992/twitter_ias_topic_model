@@ -14,7 +14,8 @@ rm(list = ls())
 gc(); gc();
 
 # Package
-pacman::p_load(tidyverse
+pacman::p_load(tidyverse,
+               magrittr
                )
 
 # Data
@@ -50,7 +51,8 @@ arrange(filter(tokens_summary_check, freq < 0.0009), desc(freq))
 # 出現頻度の低い単語を除外する（n < 5）。
 token_cutting %<>% 
   anti_join(tokens_summary_check %>% 
-              filter(freq > 15 | freq < 0.001) %>% 
+              # filter(freq > 15 | freq < 0.001) %>% 
+              filter(freq > 10 | freq < 0.01) %>% 
               dplyr::select(term), 
             by = "term")
 

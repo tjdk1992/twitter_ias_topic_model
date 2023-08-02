@@ -37,16 +37,17 @@ tweet_count_total <- read_csv("data/ias-count_total.csv")
 
 # Summarize LDA posterior by species
 ## Pattern 1: Probability of topics
-theta_topic <- theta %>%
-  dplyr::select(-topic) %>% 
-  pivot_longer(cols = TP01:TP25,
-               names_to = "topic",
-               values_to = "prob") %>%
-  group_by(name_sp, topic) %>%
-  summarise(prob = mean(prob)) %>%
-  ungroup() %>%
-  pivot_wider(names_from = topic,
-              values_from = prob)
+# theta_topic <- theta %>%
+#   dplyr::select(-topic) %>% 
+#   pivot_longer(cols = TP01:TP25,
+#                names_to = "topic",
+#                values_to = "prob") %>%
+#   group_by(name_sp, topic) %>%
+#   summarise(prob = mean(prob)) %>%
+#   ungroup() %>%
+#   pivot_wider(names_from = topic,
+#               values_from = prob)
+
 ## Pattern 2: Count of document aligned given topics
 N_doc <- theta %>% 
   group_by(name_sp) %>% 
@@ -64,6 +65,43 @@ theta_topic[is.na(theta_topic)] <- 0
 
 # Merge count data to LDA output
 theta_topic <- inner_join(tweet_count_total, theta_topic, by = "name_sp")
+
+# -----------------------------------------------------------------------------
+
+theta_topic %>% 
+  filter(count >= 100) %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, group_biol) %>% 
+  summarise(prob = mean(freq)) %>% 
+  ggplot(aes(x = topic, y = prob)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(. ~ group_biol, ncol = 2) +
+  theme_ipsum()
+
+# エントロピー算出
+# https://bi.biopapyrus.jp/seq/entropy.html
+pre_calc_entropy <- theta_topic %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, group_biol) %>% 
+  summarise(mean_freq = mean(freq)) %>% 
+  ungroup()
+
+pre_calc_entropy$ln.prob <- log(pre_calc_entropy$mean_freq)
+pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq * pre_calc_entropy$ln.prob
+group_biol_entropy <- pre_calc_entropy %>% 
+  group_by(group_biol) %>% 
+  summarise(entropy = sum(pre.ent)*(-1))
+
+group_biol_entropy %>% 
+  ggplot(aes(x = reorder(group_biol, entropy), y = entropy)) +
+  geom_bar(stat = "identity") + 
+  theme_ipsum(base_size = 8, axis_title_size = 12) +
+  labs(x="Country", y="Entropy") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Association visualization ---------------------------------------------------
 
@@ -133,7 +171,9 @@ g_bubble_topic2 <- theta_topic %>%
   pivot_longer(cols = TP01:TP25, 
                names_to = "topic", 
                values_to = "value") %>% 
-  ggplot(aes(x = topic, y = reorder(name_ja, id_reorder), label = group_biol)) +
+  ggplot(aes(x = topic, 
+             y = reorder(name_ja, id_reorder), 
+             label = group_biol)) +
   geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
   scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
@@ -175,7 +215,7 @@ g_bubble_topic2 +
 
 # Association visualization ---------------------------------------------------
 
-sp = "reptile"
+sp = "bird"
 g_bubble_topic3 <- theta_topic %>% 
   filter(group_biol == sp) %>% 
   arrange(count) %>% 
@@ -219,63 +259,138 @@ g_bar_rank3 <- theta_topic %>%
 
 g_bubble_topic3 + g_bar_rank3 + plot_layout(guides = "collect", widths = c(5, 1)) # 縦横比を設定し凡例をまとめ
 
-# Hierarchical clustering -----------------------------------------------------
-library(vegan)
-# あああ
-df_clust <- dplyr::select(theta_topic, TP01:TP25)
-dist_ias <- vegdist(df_clust, method = "bray")
-res_clust <- hclust(dist_ias, method = "ward.D2")
-plot(res_clust)
-
-rect.hclust(res_clust, 3, border = "red")
-rect.hclust(res_clust, 4, border = "blue")
-rect.hclust(res_clust, 5, border = "green")
-
-theta_topic_clust <- theta_topic %>% 
-  mutate(k3 = cutree(res_clust, 3),
-         k4 = cutree(res_clust, 4),
-         k5 = cutree(res_clust, 5))
-
-theta_topic_clust %>% 
-  pivot_longer(cols = c(k3, k4, k5),
-               names_to = "k",
-               values_to = "clust") %>% 
-  ggplot() +
-  geom_boxplot(aes(x = clust, y = log(count), group = clust)) +
-  facet_wrap(. ~ k) +
-  theme_ipsum()
-
-theta_topic_clust %>% 
-  pivot_longer(cols = TP01:TP25,
-               names_to = "topic",
-               values_to = "freq") %>% 
-  group_by(topic, k4) %>% 
-  summarise(mean_freq = mean(freq)) %>% 
-  ggplot(aes(x = k4, y = mean_freq, fill = topic)) +
-  geom_bar(stat = "identity", position = "fill") +
-  scale_fill_manual(values = pal_orig) +
-  theme_ipsum()
-
 # エントロピー算出
 # https://bi.biopapyrus.jp/seq/entropy.html
 pre_calc_entropy <- theta_topic_clust %>% 
   pivot_longer(cols = TP01:TP25,
                names_to = "topic",
                values_to = "freq") %>% 
-  group_by(topic, k4) %>% 
+  group_by(topic, group_biol) %>% 
   summarise(mean_freq = mean(freq)) %>% 
   ungroup()
 
 pre_calc_entropy$ln.prob <- log(pre_calc_entropy$mean_freq)
-pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq*pre_calc_entropy$ln.prob
+pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq * pre_calc_entropy$ln.prob
 cluster_entropy <- pre_calc_entropy %>% 
-  group_by(k4) %>% 
+  group_by(group_biol) %>% 
   summarise(entropy = sum(pre.ent)*(-1))
 
 cluster_entropy %>% 
-  ggplot(aes(x = k4, y = entropy)) +
+  ggplot(aes(x = group_biol, y = entropy)) +
   geom_bar(stat = "identity") + 
   theme_ipsum(base_size = 8, axis_title_size = 12) +
   labs(x="Country", y="Entropy") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
+# # Hierarchical clustering -----------------------------------------------------
+
+# library(vegan)
+# 
+# theta_topic_clust <- filter(theta_topic, count >= 100)
+# 
+# # あああ
+# df_clust <- dplyr::select(theta_topic_clust, TP01:TP25)
+# dist_ias <- vegdist(df_clust, method = "bray")
+# res_clust <- hclust(dist_ias, method = "ward.D2")
+# plot(res_clust)
+# 
+# rect.hclust(res_clust, 2, border = "red")
+# rect.hclust(res_clust, 3, border = "blue")
+# rect.hclust(res_clust, 4, border = "green")
+# 
+# theta_topic_clust <- theta_topic_clust %>%
+#   mutate(k2 = cutree(res_clust, 2),
+#          k3 = cutree(res_clust, 3),
+#          k4 = cutree(res_clust, 4))
+# 
+# theta_topic_clust %>%
+#   pivot_longer(cols = c(k2, k3, k4),
+#                names_to = "k",
+#                values_to = "clust") %>%
+#   ggplot() +
+#   geom_boxplot(aes(x = clust, y = log(count), group = clust)) +
+#   facet_wrap(. ~ k) +
+#   theme_ipsum()
+# 
+# theta_topic_clust %>%
+#   pivot_longer(cols = TP01:TP25,
+#                names_to = "topic",
+#                values_to = "freq") %>%
+#   group_by(topic, k3) %>%
+#   summarise(mean_freq = mean(freq)) %>%
+#   ggplot(aes(x = k3, y = mean_freq, fill = topic)) +
+#   geom_bar(stat = "identity", position = "fill") +
+#   scale_fill_manual(values = pal_orig) +
+#   theme_ipsum()
+# 
+# theta_topic_clust %>%
+#   pivot_longer(cols = TP01:TP25,
+#                names_to = "topic",
+#                values_to = "freq") %>%
+#   group_by(topic, k2) %>%
+#   summarise(mean_freq = mean(freq)) %>%
+#   ggplot(aes(x = topic, y = mean_freq)) +
+#   geom_bar(stat = "identity") +
+#   facet_wrap(. ~ k2) +
+#   scale_fill_manual(values = pal_orig) +
+#   theme_ipsum()
+
+# -----------------------------------------------------------------------------
+
+data.frame(value = quantile(theta_topic$count))
+
+theta_topic %>% filter(count <= 5.00)
+theta_topic %>% filter(count > 5.00, count <= 27.50)
+theta_topic %>% filter(count > 27.50, count <= 126.75)
+
+theta_topic_quant <- theta_topic %>% 
+  mutate(qt = if_else(count <= 5.00, "first",
+                      if_else(count > 5.00 & count <= 27.50, "second",
+                              if_else(count > 27.50 & count <= 126.75, "third", 
+                                      "fourth")))) %>% 
+  mutate(ht = if_else(count <= 27.50, "first", "second"))
+
+theta_topic_quant %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, qt) %>% 
+  summarise(mean_freq = mean(freq)) %>% 
+  ggplot(aes(x = qt, y = mean_freq, fill = topic)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_manual(values = pal_orig) +
+  theme_ipsum()
+
+theta_topic_quant %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, ht) %>% 
+  summarise(mean_freq = mean(freq)) %>% 
+  ggplot(aes(x = ht, y = mean_freq, fill = topic)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_manual(values = pal_orig) +
+  theme_ipsum()
+
+# エントロピー算出
+# https://bi.biopapyrus.jp/seq/entropy.html
+pre_calc_entropy <- theta_topic_quant %>% 
+  pivot_longer(cols = TP01:TP25,
+               names_to = "topic",
+               values_to = "freq") %>% 
+  group_by(topic, qt) %>% 
+  summarise(mean_freq = mean(freq)) %>% 
+  ungroup()
+
+pre_calc_entropy$ln.prob <- log(pre_calc_entropy$mean_freq)
+pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq * pre_calc_entropy$ln.prob
+quantile_entropy <- pre_calc_entropy %>% 
+  group_by(qt) %>% 
+  summarise(entropy = sum(pre.ent)*(-1))
+
+quantile_entropy %>% 
+  ggplot(aes(x = qt, y = entropy)) +
+  geom_bar(stat = "identity") + 
+  theme_ipsum(base_size = 8, axis_title_size = 12) +
+  labs(x="Country", y="Entropy") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))

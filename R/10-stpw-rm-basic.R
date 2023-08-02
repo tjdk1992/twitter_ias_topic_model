@@ -14,7 +14,8 @@ rm(list = ls())
 gc(); gc();
 
 # Package
-library(tidyverse) # for data manipulation
+pacman::p_load(tidyverse,
+               magrittr)
 
 # Data
 token_rm_stpw_basic <- read_csv("data/tokens-03_cut.csv")
