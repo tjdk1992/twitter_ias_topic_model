@@ -19,8 +19,8 @@ pacman::p_load(tidyverse,  # for data manipulation
                hrbrthemes, # for nice visualization
                magrittr, 　# for data manipulation
                pals,
-               patchwork# to use color palette
-)
+               patchwork  # to use color palette
+               )
 
 # Color palette
 pal_orig <- c(rep(pals::cols25(25), 2))
@@ -31,24 +31,20 @@ pal_orig <- c(rep(pals::cols25(25), 2))
 theta <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
 
 ## Tweets counts
-tweet_count_total <- read_csv("data/ias-count_total.csv")
+ias_count <- read_csv("data/ias-count.csv")
+
+## 最終的に用いる代表値
+ias_count %<>% 
+  transmute(name_sp, name_ja, 
+            group_biol, 
+            reg1, reg2, 
+            sum = sum,
+            count = mean # final typical value
+  )
 
 # Data preparation ------------------------------------------------------------
 
-# Summarize LDA posterior by species
-## Pattern 1: Probability of topics
-# theta_topic <- theta %>%
-#   dplyr::select(-topic) %>% 
-#   pivot_longer(cols = TP01:TP25,
-#                names_to = "topic",
-#                values_to = "prob") %>%
-#   group_by(name_sp, topic) %>%
-#   summarise(prob = mean(prob)) %>%
-#   ungroup() %>%
-#   pivot_wider(names_from = topic,
-#               values_from = prob)
-
-## Pattern 2: Count of document aligned given topics
+# Count of document aligned given topics
 N_doc <- theta %>% 
   group_by(name_sp) %>% 
   summarise(n_doc = n())
@@ -64,7 +60,7 @@ theta_topic <- theta %>%
 theta_topic[is.na(theta_topic)] <- 0
 
 # Merge count data to LDA output
-theta_topic <- inner_join(tweet_count_total, theta_topic, by = "name_sp")
+theta_topic <- inner_join(ias_count, theta_topic, by = "name_sp")
 
 # -----------------------------------------------------------------------------
 
@@ -80,29 +76,6 @@ theta_topic %>%
   facet_wrap(. ~ group_biol, ncol = 2) +
   theme_ipsum()
 
-# エントロピー算出
-# https://bi.biopapyrus.jp/seq/entropy.html
-pre_calc_entropy <- theta_topic %>% 
-  pivot_longer(cols = TP01:TP25,
-               names_to = "topic",
-               values_to = "freq") %>% 
-  group_by(topic, group_biol) %>% 
-  summarise(mean_freq = mean(freq)) %>% 
-  ungroup()
-
-pre_calc_entropy$ln.prob <- log(pre_calc_entropy$mean_freq)
-pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq * pre_calc_entropy$ln.prob
-group_biol_entropy <- pre_calc_entropy %>% 
-  group_by(group_biol) %>% 
-  summarise(entropy = sum(pre.ent)*(-1))
-
-group_biol_entropy %>% 
-  ggplot(aes(x = reorder(group_biol, entropy), y = entropy)) +
-  geom_bar(stat = "identity") + 
-  theme_ipsum(base_size = 8, axis_title_size = 12) +
-  labs(x="Country", y="Entropy") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
 # Association visualization ---------------------------------------------------
 
 g_bubble_topic <- theta_topic %>% 
@@ -117,7 +90,7 @@ g_bubble_topic <- theta_topic %>%
   pivot_longer(cols = TP01:TP25, 
                names_to = "topic", 
                values_to = "value") %>% 
-  ggplot(aes(x = topic, y = reorder(name_ja, id_reorder), label = group_biol)) +
+  ggplot(aes(x = topic, y = reorder(name_sp, id_reorder), label = group_biol)) +
   geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
   scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
@@ -137,12 +110,12 @@ g_bar_rank <- theta_topic %>%
   arrange(group_biol) %>% 
   mutate(id_reorder = row_number()) %>% 
   ggplot() + 
-  geom_bar(aes(x = reorder(name_ja, id_reorder), 
+  geom_bar(aes(x = reorder(name_sp, id_reorder), 
                y = count, 
                fill = group_biol), 
            stat = "identity",
            show.legend = FALSE) +
-  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = count, hjust = -0.2), size = 3) +
+  geom_text(aes(x = reorder(name_sp, id_reorder), y = count, label = round(count, 2), hjust = -0.2), size = 3) +
   scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   labs(x = "Species", 
        y = "No. of tweets") +
@@ -160,6 +133,12 @@ g_bubble_topic +
   g_bar_rank + 
   plot_layout(guides = "collect", widths = c(5, 1)) & 
   theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
+
+# Save the visualized result
+ggsave("fig/bubble-biol-ordered-category.png",
+       units = "mm", width = 170, height = 200)
+ggsave("fig/bubble-biol-ordered-category.eps",
+       units = "mm", width = 170, height = 200, device = cairo_ps)
 
 # Association visualization ---------------------------------------------------
 H = 75
@@ -194,7 +173,7 @@ g_bar_rank2 <- theta_topic %>%
                fill = group_biol), 
            stat = "identity",
            show.legend = FALSE) +
-  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = count, hjust = -0.2), size = 3) +
+  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = round(count, 2), hjust = -0.2), size = 3) +
   scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   labs(x = "Species", 
        y = "No. of tweets") +
@@ -212,6 +191,12 @@ g_bubble_topic2 +
   g_bar_rank2 + 
   plot_layout(guides = "collect", widths = c(5, 1)) & 
   theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
+
+# Save the visualized result
+ggsave("fig/bubble-biol-category.png",
+       units = "mm", width = 170, height = 200)
+ggsave("fig/bubble-biol-category.eps",
+       units = "mm", width = 170, height = 200, device = cairo_ps)
 
 # Association visualization ---------------------------------------------------
 
@@ -243,7 +228,8 @@ g_bar_rank3 <- theta_topic %>%
                fill = group_biol), 
            stat = "identity",
            show.legend = FALSE) +
-  geom_text(aes(x = reorder(name_ja, id_reorder), y = count, label = count, hjust = -0.2), size = 3) +
+  geom_text(aes(x = reorder(name_ja, id_reorder), 
+                y = count, label = count, hjust = -0.2), size = 3) +
   scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   labs(x = "Species", 
        y = "No. of tweets") +
@@ -257,30 +243,9 @@ g_bar_rank3 <- theta_topic %>%
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
   coord_flip()
 
-g_bubble_topic3 + g_bar_rank3 + plot_layout(guides = "collect", widths = c(5, 1)) # 縦横比を設定し凡例をまとめ
-
-# エントロピー算出
-# https://bi.biopapyrus.jp/seq/entropy.html
-pre_calc_entropy <- theta_topic_clust %>% 
-  pivot_longer(cols = TP01:TP25,
-               names_to = "topic",
-               values_to = "freq") %>% 
-  group_by(topic, group_biol) %>% 
-  summarise(mean_freq = mean(freq)) %>% 
-  ungroup()
-
-pre_calc_entropy$ln.prob <- log(pre_calc_entropy$mean_freq)
-pre_calc_entropy$pre.ent <- pre_calc_entropy$mean_freq * pre_calc_entropy$ln.prob
-cluster_entropy <- pre_calc_entropy %>% 
-  group_by(group_biol) %>% 
-  summarise(entropy = sum(pre.ent)*(-1))
-
-cluster_entropy %>% 
-  ggplot(aes(x = group_biol, y = entropy)) +
-  geom_bar(stat = "identity") + 
-  theme_ipsum(base_size = 8, axis_title_size = 12) +
-  labs(x="Country", y="Entropy") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+g_bubble_topic3 + 
+  g_bar_rank3 + 
+  plot_layout(guides = "collect", widths = c(5, 1)) # 縦横比を設定し凡例をまとめ
 
 # # Hierarchical clustering -----------------------------------------------------
 
@@ -394,3 +359,11 @@ quantile_entropy %>%
   theme_ipsum(base_size = 8, axis_title_size = 12) +
   labs(x="Country", y="Entropy") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+
+
+
+
+
+

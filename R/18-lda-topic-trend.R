@@ -42,43 +42,6 @@ theta %>%
 
 # Time series trends ----------------------------------------------------------
 
-## 年で集計する。
-# 推定後そのまま解析続ける場合は以下でもOK
-# topic_proportion_per_year <- aggregate(theta, 
-#                                        by = list(year = tweet_finalizing$year), 
-#                                        mean)
-topic_proportion_per_year <- theta %>% 
-  pivot_longer(cols = TP01:TP25,
-               names_to = "no_topic",
-               values_to = "prob") %>% 
-  group_by(no_topic, year) %>% 
-  summarise(prob = mean(prob)) %>% 
-  ungroup()
-
-# そのままのトピックでやる場合
-topic_proportion_per_year %>% 
-  ggplot(aes(x = year, y = prob, 
-             group = no_topic, colour = as.factor(no_topic))) + 
-  geom_line(linewidth = 1, show.legend = FALSE) + 
-  scale_color_manual(values = as.vector(pal_orig)) + 
-  facet_wrap(. ~ no_topic, ncol = 6, nrow = 5) +
-  labs(x = "Year", y = "Probability") +
-  theme_ipsum(base_family = "Helvetica", 
-              base_size = 8, 
-              axis_text_size = 8, 
-              axis_title_size = 8, 
-              axis_title_just = "mc") +
-  theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
-        axis.text.x = element_text(angle = 90)) +
-  facet_wrap(. ~ no_topic, ncol = 5)
-
-## Save the visualized result
-ggsave("fig/Fig_temporal-topic-trend.png",
-       units = "mm", width = 174, height = 150)
-ggsave("fig/Fig_temporal-topic-trend.eps", 
-       units = "mm", width = 174, height = 150, device = cairo_ps)
-
-# 1doc-1topicでやる場合
 N_doc_year <- theta %>% 
   group_by(year) %>% 
   summarise(n_doc = n())
@@ -87,6 +50,7 @@ theta %>%
   summarise(n = n()) %>% 
   left_join(N_doc_year, by = "year") %>% 
   mutate(freq = n / n_doc) %>% 
+  mutate(topic = str_replace_all(topic, "TP", "Topic ")) %>% 
   ggplot(aes(x = year, y = freq, 
              group = topic, colour = as.factor(topic))) + 
   geom_line(linewidth = 1, show.legend = FALSE) + 
@@ -101,3 +65,10 @@ theta %>%
   theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
         axis.text.x = element_text(angle = 90)) +
   facet_wrap(. ~ topic, ncol = 5)
+
+# Save the visualized result
+ggsave("fig/temporal-topic-trend.png",
+       units = "mm", width = 174, height = 180)
+ggsave("fig/temporal-topic-trend.eps", 
+       units = "mm", width = 174, height = 180, device = cairo_ps)
+

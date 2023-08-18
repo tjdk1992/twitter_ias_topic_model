@@ -25,6 +25,59 @@ tokens_rm_stpw_basic <- read_csv("data/tokens-04_rm-stpw-basic.csv")
 tokens_rm_stpw_general <- read_csv("data/tokens-05_rm-stpw-general.csv")
 tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
 
+# Helper function -------------------------------------------------------------
+
+# Function for creating doc-term matrix
+makeDTMatrix <- function(df_tokens) {
+  df_tokens %>% 
+    anti_join(df_tokens %>% 
+                group_by(id_cleansed) %>% 
+                summarise(n = n()) %>% 
+                # 単語が1個/1Tweetの場合は除外
+                filter(n < 5) %>% 
+                dplyr::select(id_cleansed),
+              by = "id_cleansed") %>% 
+    group_by(id_cleansed, term) %>% 
+    summarise(count = n()) %>% 
+    ungroup() %>% 
+    tidytext::cast_dtm(document = "id_cleansed",
+                       term = "term",
+                       value = "count")
+}
+
+# Function for test running of LDA
+runLDAtest <- function(dtm, 
+                       K_from = 15, K_to = 60, K_by = 15, 
+                       seed = 123, 
+                       path_base = "data-manual/lda-stpw-test/", 
+                       file_name = "topic-list-stopword-rm") {
+  for (K in seq(K_from, K_to, K_by)) {
+    topicModel <- topicmodels::LDA(dtm,
+                                   k = K,
+                                   method = "Gibbs",
+                                   control = list(alpha = 50/K, 
+                                                  iter = 1000, 
+                                                  verbose = 25, 
+                                                  seed = seed))
+    name_path <- str_c(path_base,
+                       Sys.time() %>% 
+                         str_remove_all("-") %>% 
+                         str_replace_all(c(" " = "_",
+                                           ":" = "")) %>% 
+                         str_remove(".{2}$"),
+                       "_",
+                       file_name,
+                       "_seed",
+                       seed,
+                       "_K",
+                       K,
+                       ".xlsx"
+    )
+    as.data.frame(terms(topicModel, 20)) %>% 
+      writexl::write_xlsx(name_path)
+  }
+}
+
 #------------------------------------------------------------------------------
 
 # DTMの作成

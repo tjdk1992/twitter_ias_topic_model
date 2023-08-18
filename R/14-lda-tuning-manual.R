@@ -69,8 +69,8 @@ for (K in seq(10, 60, by = 5)) {
 
 #------------------------------------------------------------------------------
 
-# ldatuningの結果を踏まえて10〜60 BY 10でトピックを推定してみる。
-for (K in seq(15, 35, 2)) {
+# ldatuningの結果を踏まえて15〜35 BY 1でトピックを推定してみる。
+for (K in seq(15, 35, 1)) {
   topicModel <- LDA(dtm_rm_stpw_original,
                     k = K,
                     method = "Gibbs",
@@ -83,27 +83,8 @@ for (K in seq(15, 35, 2)) {
                      ".xlsx")
   as.data.frame(terms(topicModel, 20)) %>% 
     writexl::write_xlsx(name_path)
-}
+} # K = 25で決定
 
-#------------------------------------------------------------------------------
-
-# ldatuningの結果を踏まえて10〜60 BY 10でトピックを推定してみる。
-for (K in seq(15, 35, 2)) {
-  topicModel <- LDA(dtm_rm_stpw_original,
-                    k = K,
-                    method = "Gibbs",
-                    control = list(alpha = 50/K, 
-                                   iter = 1000, 
-                                   verbose = 25, 
-                                   seed = 123))
-  name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K",
-                     K,
-                     ".xlsx")
-  as.data.frame(terms(topicModel, 20)) %>% 
-    writexl::write_xlsx(name_path)
-}
-
-# K = 25で決定
 #------------------------------------------------------------------------------
 
 K = 25

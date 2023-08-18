@@ -91,7 +91,7 @@ res_ldatuning %>%
           strip.text = element_blank())
 
 # Save the visualized result
-ggsave("fig/ldatuning-output.png",
-       units = "mm", width = 174, height = 200)
-# ggsave("submission/biodivers-conserv-1st/images/Fig-S01_ldatuning-output.eps",
-#        units = "mm", width = 174, height = 200, device = cairo_ps)
+ggsave("fig-suppl/ldatuning-output.png",
+       units = "mm", width = 140, height = 160)
+ggsave("fig-suppl/ldatuning-output.eps",
+       units = "mm", width = 140, height = 160, device = cairo_ps)

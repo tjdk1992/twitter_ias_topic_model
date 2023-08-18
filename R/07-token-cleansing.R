@@ -24,6 +24,18 @@ pacman::p_load(tidyverse,
 # Data
 token_cleansing <- read_csv("data/tokens-01_original.csv")
 
+# Helper function -------------------------------------------------------------
+
+# View top-occurred terms
+viewTopTerm <- function(df_tokens, head = 5000) {
+  df_tokens %>% 
+    group_by(term) %>% 
+    summarise(n = n()) %>% 
+    arrange(term) %>% 
+    head(head) %>% 
+    View()
+}
+
 # Automatic cleaning ----------------------------------------------------------
 
 # 品詞の選択

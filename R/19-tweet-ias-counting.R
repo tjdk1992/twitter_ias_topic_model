@@ -16,59 +16,128 @@ gc(); gc();
 # Packages
 pacman::p_load(tidyverse,
                readxl,
-               lubridate
+               lubridate,
+               hrbrthemes
                )
 
 # Data
 tweet_finalized <- read_csv("data/tweet-05_finalized.csv")
 dat_ias_ja <- read_csv("data/basic-ias-info.csv")
 
+# Color palette
+pal_orig <- c(rep(pals::cols25(25), 2))
+
 # Count tweets-----------------------------------------------------------------
 
-# Count occurrence of IAS
-tweet_count_total <- tweet_finalized %>% 
-  group_by(name_sp) %>% 
-  summarise(count = n())
-
-tweet_count_annual <- tweet_finalized %>% 
-  group_by(name_sp, year) %>% 
-  summarise(count = n())
-
-# Re-add the IAS information
-glimpse(dat_ias_ja)
-tweet_count_total <- tweet_count_total %>% 
-  right_join(dat_ias_ja, by = "name_sp") %>% 
-  dplyr::select(-c(code_ias, KATAKANA, katakana)) %>% 
-  dplyr::select(name_ja, name_sp, group_biol, taxon, reg1, reg2, 
-                count) %>% 
-  distinct(.keep_all = TRUE)
-tweet_count_total$count[is.na(tweet_count_total$count)] <- 0
-
-tweet_count_annual <- tweet_count_annual %>% 
-  right_join(dat_ias_ja, by = "name_sp") %>% 
-  dplyr::select(-c(code_ias, KATAKANA, katakana)) %>% 
-  dplyr::select(name_ja, name_sp, year, group_biol, taxon, reg1, reg2, 
-                count) %>% 
-  distinct(.keep_all = TRUE)
-tweet_count_annual$count[is.na(tweet_count_annual$count)] <- 0
-
-# Visualize--------------------------------------------------------------------
-
-# The number of tweets in total
-tweet_count_annual %>% 
-  group_by(year) %>% 
-  summarise(n = sum(count)) %>% 
-  ggplot(aes(x = year, y = n)) +
-  geom_bar(stat = "identity")
-
 # The number of tweets of each IAS
-tweet_count_annual %>% 
+tweet_finalized %>% 
+  group_by(name_sp, year) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  left_join(dat_ias_ja %>% 
+              dplyr::select(name_sp, group_biol) %>% 
+              distinct(),
+            by = "name_sp") %>% 
   ggplot(aes(x = year, y = count)) +
-  geom_line(aes(colour = name_ja), 
-            linewidth = 1.0,
+  geom_line(aes(group = name_sp, colour = group_biol), 
+            linewidth = 0.5,
             show.legend = FALSE) +
-  theme_ipsum(base_family = "HiraKakuPro-W3")
+  facet_wrap(. ~ group_biol) +
+  scale_color_manual(values = pal_orig) +
+  theme_ipsum(base_family = "Helvetica")
 
-# Write data-------------------------------------------------------------------
-write_csv(tweet_count_total, "data/ias-count_total.csv") # For main analysis
-write_csv(tweet_count_annual, "data/ias-count_annual.csv")
+# Yearly count (top 10 species)
+ias_top <- tweet_finalized %>% 
+  group_by(name_sp) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  head(30) %>% 
+  dplyr::select(name_sp)
+
+tweet_finalized %>% 
+  inner_join(ias_top, by = "name_sp") %>% 
+  group_by(name_sp, year) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = year, y = count)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(. ~ name_sp, ncol = 6) +
+  theme_ipsum(plot_margin = margin(5, 5, 5, 5),
+              strip_text_face = "italic")
+
+tweet_finalized %>% 
+  inner_join(ias_top, by = "name_sp") %>%
+  group_by(name_sp, year) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  inner_join(dat_ias_ja %>% 
+               dplyr::select(name_sp, group_biol) %>% 
+               distinct(), 
+             by = "name_sp") %>% 
+  ggplot(aes(x = reorder(name_sp, count), y = count)) +
+  geom_boxplot(aes(fill = group_biol), outlier.size = 0.5, linewidth = 0.5) +
+  scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  labs(x = "Species", 
+       y = "No. of tweets") +
+  theme_ipsum(base_family = "Helvetica", 
+              base_size = 8, 
+              axis_text_size = 8,
+              axis_title_size = 10,
+              axis_title_just = "mc") + 
+  scale_fill_manual(values = pal_orig) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1), 
+        axis.text.y = element_text(face = "italic"),
+        legend.position = "right",
+        legend.box.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.key.size = unit(5, 'mm'),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
+  labs(x = "") +
+  ylim(0, 3000) # Outlier of Solenopsis invicta was removed from the plot
+
+# Save the visualized result
+ggsave("fig/boxplot_top-occurred-ias.png",
+       units = "mm", width = 190, height = 120)
+ggsave("fig/boxplot_top-occurred-ias.eps",
+       units = "mm", width = 190, height = 120, device = cairo_ps)
+
+# 最初に出現した年の分布
+tweet_finalized %>%
+  group_by(name_sp, year) %>% 
+  summarise(count = n()) %>% 
+  group_by(name_sp) %>% 
+  summarise(year_1st_occur = min(year)) %>% 
+  group_by(year_1st_occur) %>% 
+  summarise(n = n())
+
+# Calculate typical values
+tweet_count <- tweet_finalized %>%
+  group_by(name_sp, year) %>% 
+  summarise(count = n()) %>% 
+  group_by(name_sp) %>% 
+  summarise(sum = sum(count),
+            mean = mean(count),
+            sd = sd(count),
+            se = sd(count) / n(),
+            mean_1 = mean(count, trim = 0.1),
+            mean_3 = mean(count, trim = 0.3),
+            mean_5 = mean(count, trim = 0.5),
+            median = median(count),
+            min = min(count),
+            max = max(count),
+            mid_range = ((min + max)/2))
+
+# Select typical value for this study
+filter(tweet_count, str_detect(name_sp, "Soleno|Micro|Lepomis"))
+
+# Re-add the IAS information---------------------------------------------------
+
+# カタカナ名による重複を除外しておく
+glimpse(dat_ias_ja)
+dat_ias_ja <- dat_ias_ja %>% 
+  dplyr::select(group_biol, name_ja, name_sp, reg1, reg2) %>% 
+  distinct(.keep_all = TRUE)
+
+# Merge
+tweet_count <- left_join(tweet_count, dat_ias_ja, by = "name_sp")
+
+# Write data
+write_csv(tweet_count, "data/ias-count.csv")

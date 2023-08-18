@@ -16,7 +16,8 @@ gc(); gc();
 # Package
 pacman::p_load(tidyverse,
                readxl,
-               stringi
+               stringi,
+               writexl
 )
 
 # Data
@@ -45,3 +46,37 @@ dat_ias_ja <- dat_ias_ja %>%
 
 # Write data
 write_csv(dat_ias_ja, "data/basic-ias-info.csv")
+
+# For publication
+dat_ias_ja <- read_csv("data/basic-ias-info.csv")
+
+dat_ias_distinct <- dat_ias_ja %>% 
+  transmute(name_ja, KATAKANA) %>% 
+  group_by(name_ja) %>% 
+  mutate(id_pivot = row_number()) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = id_pivot, 
+              values_from = KATAKANA)
+
+dat_ias_distinct[is.na(dat_ias_distinct)] <- ""
+
+dat_ias_distinct <- dat_ias_distinct %>% 
+  mutate(name_ja,
+         name_ref = str_c(`1`, `2`, `3`, `4`, `5`, sep = ","),
+         name_ref = str_remove_all(name_ref, ",*$"),
+         name_ref = str_replace_all(name_ref, ",", ", ")) %>% 
+  dplyr::select(name_ja, name_ref)
+
+table_ias_ja <- dat_ias_ja %>% 
+  dplyr::select(group_biol, name_ja, name_sp) %>% 
+  distinct() %>% 
+  left_join(dat_ias_distinct, by = "name_ja") %>% 
+  transmute(`Biological Group` = str_replace_all(group_biol,
+                                                 c("\\(insect\\)" = "",
+                                                   "\\(other\\)" = "")),
+            Species = name_sp,
+            `Japanese name` = name_ja,
+            `Referred name` = name_ref)
+
+# Write in xlsx format
+write_xlsx(table_ias_ja, "table-suppl/table-ias-ja-list.csv")
