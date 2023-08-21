@@ -39,9 +39,14 @@ ias_count %<>%
             group_biol, 
             reg1, reg2, 
             sum = sum,
-            count = mean # final typical value
+            count = median # final typical value
   )
 
+## Order of biological group
+ias_count$group_biol <- factor(ias_count$group_biol, 
+                               levels = c("mammal", "bird", "reptile", 
+                                          "amphibian", "fish", 
+                                          "invertebrate", "plant"))
 # Data preparation ------------------------------------------------------------
 
 # Count of document aligned given topics
@@ -83,7 +88,7 @@ g_bubble_topic <- theta_topic %>%
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
   ungroup() %>% 
-  filter(rank_group <= 7) %>% 
+  filter(sum >= 100 & rank_group <= 10) %>% 
   arrange(count) %>% 
   arrange(group_biol) %>% 
   mutate(id_reorder = row_number()) %>% 
@@ -95,6 +100,7 @@ g_bubble_topic <- theta_topic %>%
   scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
   scale_x_discrete(position = "top") +
+  labs(x = "", y = "") +
   theme_ipsum(base_family = "HiraKakuPro-W3",
               base_size = 8) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
@@ -105,7 +111,7 @@ g_bar_rank <- theta_topic %>%
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
   ungroup() %>% 
-  filter(rank_group <= 7) %>% 
+  filter(sum >= 100, rank_group <= 10) %>% 
   arrange(count) %>% 
   arrange(group_biol) %>% 
   mutate(id_reorder = row_number()) %>% 
@@ -115,7 +121,10 @@ g_bar_rank <- theta_topic %>%
                fill = group_biol), 
            stat = "identity",
            show.legend = FALSE) +
-  geom_text(aes(x = reorder(name_sp, id_reorder), y = count, label = round(count, 2), hjust = -0.2), size = 3) +
+  geom_text(aes(x = reorder(name_sp, id_reorder), 
+                y = count, 
+                label = str_c(round(count, 2), "(", sum, ")"), 
+                hjust = -0.2), size = 3) +
   scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
   labs(x = "Species", 
        y = "No. of tweets") +
@@ -131,7 +140,7 @@ g_bar_rank <- theta_topic %>%
 
 g_bubble_topic + 
   g_bar_rank + 
-  plot_layout(guides = "collect", widths = c(5, 1)) & 
+  plot_layout(guides = "collect", widths = c(7, 2)) & 
   theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
 
 # Save the visualized result
@@ -142,6 +151,7 @@ ggsave("fig/bubble-biol-ordered-category.eps",
 
 # Association visualization ---------------------------------------------------
 H = 75
+
 g_bubble_topic2 <- theta_topic %>% 
   arrange(desc(count)) %>% 
   head(H) %>% 

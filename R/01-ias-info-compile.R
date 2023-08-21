@@ -34,7 +34,9 @@ dat_ias_ja <- dat_ias_ja %>%
   mutate(num_code1 = c(rep("0", 9), rep("", count(dat_ias_ja)-9)),
          num_code2 = c(rep("0", 99) , rep("", count(dat_ias_ja)-99))) %>% 
   transmute(code_ias = str_c("IAS", num_code1, num_code2, row_number()),
-            group_biol = Taxon,
+            group_biol = str_replace_all(Taxon,
+                                         c("\\(insect\\)" = "",
+                                           "\\(other\\)" = "")),
             taxon = 高次分類群,
             name_ja = 和名,
             KATAKANA = カタカナ名,
@@ -71,9 +73,7 @@ table_ias_ja <- dat_ias_ja %>%
   dplyr::select(group_biol, name_ja, name_sp) %>% 
   distinct() %>% 
   left_join(dat_ias_distinct, by = "name_ja") %>% 
-  transmute(`Biological Group` = str_replace_all(group_biol,
-                                                 c("\\(insect\\)" = "",
-                                                   "\\(other\\)" = "")),
+  transmute(`Biological Group` = group_biol,
             Species = name_sp,
             `Japanese name` = name_ja,
             `Referred name` = name_ref)

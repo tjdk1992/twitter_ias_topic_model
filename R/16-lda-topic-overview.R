@@ -26,6 +26,28 @@ pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
 beta <- read_csv("data/lda-output-01_topic-term.csv")
+theta <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
+
+# Topic distribution in whole text data----------------------------------------
+theta %>% 
+  group_by(topic) %>% 
+  summarise(n = n()) %>% 
+  ggplot(aes(x = reorder(topic, as.numeric(str_remove_all(topic, "TP"))), y = n)) +
+  geom_bar(stat = "identity", fill = pal_orig[1]) +
+  labs(x = "Topic", y = "The number of tweets") +
+  theme_ipsum(base_size = 10,
+              axis_title_size = 10,
+              strip_text_size = 10,
+              axis_text_size = 8,
+              axis_title_just = "center",
+              base_family = "Helvetica") +
+  theme(axis.text.x = element_text(angle = 90))
+
+# Save the visualized result
+ggsave("fig-suppl/bargraph-tweet-number-topic.png",
+       units = "mm", width = 140, height = 120)
+ggsave("fig-suppl/bargraph-tweet-number-topic.eps",
+       units = "mm", width = 140, height = 120, device = cairo_ps)
 
 # Topic labelling--------------------------------------------------------------
 

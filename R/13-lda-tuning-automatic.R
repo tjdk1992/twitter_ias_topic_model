@@ -83,15 +83,18 @@ res_ldatuning %>%
     facet_grid(group ~ .) +
     scale_color_manual(values=as.vector(cols25(4))) +
     labs(x = "Metrics values", y = "The number of topics (K)") +
-    theme_ipsum(axis_text_size = 8,
-                axis_title_just = "center",
-                base_family = "Helvetica") +
+  theme_ipsum(base_size = 10,
+              axis_title_size = 10,
+              strip_text_size = 10,
+              axis_text_size = 8,
+              axis_title_just = "center",
+              base_family = "Helvetica") +
     theme(legend.position = "bottom",
           axis.text.x = element_text(angle = 45, hjust = 1),
           strip.text = element_blank())
 
 # Save the visualized result
 ggsave("fig-suppl/ldatuning-output.png",
-       units = "mm", width = 140, height = 160)
+       units = "mm", width = 180, height = 180)
 ggsave("fig-suppl/ldatuning-output.eps",
-       units = "mm", width = 140, height = 160, device = cairo_ps)
+       units = "mm", width = 180, height = 180, device = cairo_ps)

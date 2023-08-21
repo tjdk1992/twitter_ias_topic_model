@@ -45,15 +45,17 @@ count_original <- tweet_finalizing %>%
 
 # 単語数が足りなかったTweetの削除後
 count_filtered <- tweet_finalizing %>% 
-  inner_join(tokens_finalized %>% 
-               anti_join(tokens_finalized %>% 
-                           group_by(id_cleansed) %>% 
-                           summarise(n = n()) %>% 
-                           filter(n < 5) %>% 
-                           dplyr::select(id_cleansed),
-                         by = "id_cleansed") %>% 
-               distinct(id_cleansed, .keep_all = FALSE),
-             by = "id_cleansed") %>% 
+  inner_join(
+    tokens_finalized %>% 
+      anti_join(
+        tokens_finalized %>% 
+          group_by(id_cleansed) %>% 
+          summarise(n = n()) %>% 
+          filter(n < 5) %>% 
+          dplyr::select(id_cleansed),
+        by = "id_cleansed") %>% 
+      distinct(id_cleansed, .keep_all = FALSE),
+    by = "id_cleansed") %>% 
   group_by(name_sp) %>% 
   summarise(n_filtered = n()) %>% 
   arrange(n_filtered)
@@ -77,18 +79,19 @@ count_test %>%
 ggsave("fig/orig-filtered-count-correlation.png",
        units = "mm", width = 100, height = 100)
 ggsave("fig/orig-filtered-count-correlation.eps", 
-       units = "mm", width = 174, height = 150, device = cairo_ps)
+       units = "mm", width = 100, height = 100, device = cairo_ps)
 
 # Document-term matrix---------------------------------------------------------
 
 # Remove tweets containing only 1 term
 tokens_finalized %<>% 
-  anti_join(tokens_finalized %>% 
-              group_by(id_cleansed) %>% 
-              summarise(n = n()) %>% 
-              filter(n < 5) %>% 
-              dplyr::select(id_cleansed),
-            by = "id_cleansed")
+  anti_join(
+    tokens_finalized %>% 
+      group_by(id_cleansed) %>% 
+      summarise(n = n()) %>% 
+      filter(n < 5) %>% 
+      dplyr::select(id_cleansed),
+    by = "id_cleansed")
 
 tokens_finalized %>% 
   dplyr::select(id_cleansed) %>% 
@@ -97,11 +100,12 @@ tokens_finalized %>%
 # Export tweets finally included for LDA inference
 tweet_finalizing %<>% 
   arrange(id_cleansed) %>% 
-  inner_join(tokens_finalized %>% 
-               dplyr::select(id_cleansed) %>% 
-               arrange(id_cleansed) %>% 
-               distinct(.keep_all = TRUE),
-             by = "id_cleansed") %>% 
+  inner_join(
+    tokens_finalized %>% 
+      dplyr::select(id_cleansed) %>% 
+      arrange(id_cleansed) %>% 
+      distinct(.keep_all = TRUE),
+    by = "id_cleansed") %>% 
   mutate(id_finalized = row_number())
 
 # Export final tweets
