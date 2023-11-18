@@ -2,12 +2,12 @@
 
 **Author**: Daiki Tomojiri & Kosuke Takaya (2023)
 
-**Publication**: _Conservation Biology_ (current status: under analysis)
+**Publication**: _Conservation Biology_ (current status: under submission)
 
 **Keywords**: invasive alien species, conservation culturomics, twitter, text mining, topic modelling
 
 ## Abstract
-Twitterは、スマートフォンを持っていればあらゆる個人が意見を発信できるSNSである。
+Invasion Culturomics is an emerging field of study that utilizes digital data existing on the Internet to reveal the human dimension of the non-indigenous species (NIS). Although hypothetical approaches have been applied to examine explanatory variables that predict the amount of public attention proxies, it has been difficult to observe direct associations between these variables. This study aims to deepen our understanding of the relationship between people and NIS by analyzing the content of texts about NIS on social media, and by clarifying the context and aspects to which public attention is directed. Specifically, we quantified tweets about NIS to identify popular NIS that attract a lot of public attention on Twitter, identified hidden topics occurred with NIS name by applying topic modeling to tweets, and investigated the topic distribution over popular NISs. A relatively small number of species were selected as popular NIS for further analysis while major species attracted little public attention and 25 hidden topics were identified from the all tweets used for the analysis of this study. The topic distribution over popular NISs had three patterns across taxonomic groups: (1) biased among topics but consistent within taxonomic groups, (2) relatively even among topics and consistent within taxonomic groups, and (3) not consistent within groups and the topical distribution is differently biased among species. These findings can provide important insight in terms of formulation of a better strategy for NIS management approaching social and human dimensions of NIS including dissemination, environmental education, and management campaigns. The methodological framework of this study can be applied to address important topics attracting public attention in the environmental issues which have similar composing structure of objects in the target issues (for example, species of disease pathogen and types of marine debris).
 
 ## Analysis Design
 data collection -
