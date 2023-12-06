@@ -13,25 +13,25 @@ Invasion culturomics is an emerging field of study that utilizes digital data ex
 
 | Directory | Type | File Name | Description |
 |:---|:---|:---|:---|
-|R |R script |01-nis-list-compilation.R|script for XXXX |
-|R |R script |02-tweet-collection.R|script for XXXX |
-|R |R script |03-tweet-filtering.R|script for XXXX |
-|R |R script |04-tweet-screening.R|script for XXXX |
-|R |R script |05-tweet-cleansing.R|script for XXXX |
-|R |R script |06-tweet-tokenization.R|script for XXXX |
-|R |R script |07-token-cleansing.R|script for XXXX |
-|R |R script |08-token-cutting.R|script for XXXX |
-|R |R script |09-stopword-basic.R|script for XXXX |
-|R |R script |10-stopword-general.R|script for XXXX |
-|R |R script |11-stopword-original.R|script for XXXX |
-|R |R script |12-lda-trial-examination.R|script for XXXX |
-|R |R script |13-lda-tuning-automatic.R|script for XXXX |
-|R |R script |14-lda-tuning-manual.R|script for XXXX |
-|R |R script |15-lda-model-inference.R|script for XXXX |
-|R |R script |16-lda-topic-overview.R|script for XXXX |
-|R |R script |17-tweet-ias-occurrence.R|script for XXXX |
-|R |R script |18-count-topic-assoc.R|script for XXXX |
-|R |R script |19-topic-dissimilarity.R|script for XXXX |
+|R  |R script |01-nis-list-compilation.R  |script for XXXX |
+|R  |R script |02-tweet-collection.R      |script for XXXX |
+|R  |R script |03-tweet-filtering.R       |script for XXXX |
+|R  |R script |04-tweet-screening.R  |script for XXXX |
+|R  |R script |05-tweet-cleansing.R  |script for XXXX |
+|R  |R script |06-tweet-tokenization.R |script for XXXX |
+|R  |R script |07-token-cleansing.R  |script for XXXX |
+|R  |R script |08-token-cutting.R  |script for XXXX |
+|R  |R script |09-stopword-basic.R |script for XXXX |
+|R  |R script |10-stopword-general.R |script for XXXX |
+|R  |R script |11-stopword-original.R  |script for XXXX |
+|R  |R script |12-lda-trial-examination.R  |script for XXXX |
+|R  |R script |13-lda-tuning-automatic.R |script for XXXX |
+|R  |R script |14-lda-tuning-manual.R  |script for XXXX |
+|R  |R script |15-lda-model-inference.R  |script for XXXX |
+|R  |R script |16-lda-topic-overview.R |script for XXXX |
+|R  |R script |17-tweet-ias-occurrence.R |script for XXXX |
+|R  |R script |18-count-topic-assoc.R  |script for XXXX |
+|R  |R script |19-topic-dissimilarity.R  |script for XXXX |
 |fig |figure | | |
 |fig |figure | | |
 |fig |figure | | |
