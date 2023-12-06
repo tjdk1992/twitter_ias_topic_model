@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieve                                              #
+# Script Name: 02-tweet-retrieval.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #

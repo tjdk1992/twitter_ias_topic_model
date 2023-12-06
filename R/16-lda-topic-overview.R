@@ -45,9 +45,9 @@ theta %>%
 
 # Save the visualized result
 ggsave("fig-suppl/bargraph-tweet-number-topic.png",
-       units = "mm", width = 140, height = 120)
+       units = "mm", width = 170, height = 130)
 ggsave("fig-suppl/bargraph-tweet-number-topic.eps",
-       units = "mm", width = 140, height = 120, device = cairo_ps)
+       units = "mm", width = 170, height = 130, device = cairo_ps)
 
 # Topic labelling--------------------------------------------------------------
 

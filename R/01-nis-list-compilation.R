@@ -1,10 +1,8 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 01-ias-info-compilation                                        #
+# Script Name: 01-nis-list-compilation.R                                      #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
-#                                                                             #
-# This R script prepare the data frame containing IAS information             #
 #-----------------------------------------------------------------------------#
 
 # Setup -----------------------------------------------------------------------
