@@ -12,7 +12,7 @@ Invasion culturomics is an emerging field of study that utilizes digital data ex
 ## Contents of the Repository
 
 | Dir | Type | File Name | Description |
-|:---|:---|:---|:---|
+|:-------|:---|:---|:---|
 |R  |R script |01-nis-list-compilation.R  |Script for organizing data on NIS copied from NIES website (https://www.nies.go.jp/biodiversity/invasive/) |
 |R  |R script |02-tweet-collection.R      |Script for retrieving Tweets data through Twitter academic API by using get_all_tweets function from the academictwitteR package of R. |
 |R  |R script |03-tweet-filtering.R       |Script to automatically exclude unnecessary tweets such as retweets. |
