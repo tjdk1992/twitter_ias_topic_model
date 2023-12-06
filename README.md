@@ -1,18 +1,13 @@
-# Quantitative assessment of relative topics and occurrence of invasive alien species in the Twitter
+# Aspects of public attention on popular nonindigenous species, as determined by a comprehensive assessment of Japanese social media
 
 **Author**: Daiki Tomojiri & Kosuke Takaya (2023)
 
-**Publication**: _Conservation Biology_ (current status: under submission)
+**Publication**: _Biological Conservation_ (current status: under submission)
 
 **Keywords**: invasive alien species, conservation culturomics, twitter, text mining, topic modelling
 
 ## Abstract
-Invasion Culturomics is an emerging field of study that utilizes digital data existing on the Internet to reveal the human dimension of the non-indigenous species (NIS). Although hypothetical approaches have been applied to examine explanatory variables that predict the amount of public attention proxies, it has been difficult to observe direct associations between these variables. This study aims to deepen our understanding of the relationship between people and NIS by analyzing the content of texts about NIS on social media, and by clarifying the context and aspects to which public attention is directed. Specifically, we quantified tweets about NIS to identify popular NIS that attract a lot of public attention on Twitter, identified hidden topics occurred with NIS name by applying topic modeling to tweets, and investigated the topic distribution over popular NISs. A relatively small number of species were selected as popular NIS for further analysis while major species attracted little public attention and 25 hidden topics were identified from the all tweets used for the analysis of this study. The topic distribution over popular NISs had three patterns across taxonomic groups: (1) biased among topics but consistent within taxonomic groups, (2) relatively even among topics and consistent within taxonomic groups, and (3) not consistent within groups and the topical distribution is differently biased among species. These findings can provide important insight in terms of formulation of a better strategy for NIS management approaching social and human dimensions of NIS including dissemination, environmental education, and management campaigns. The methodological framework of this study can be applied to address important topics attracting public attention in the environmental issues which have similar composing structure of objects in the target issues (for example, species of disease pathogen and types of marine debris).
-
-## Analysis Design
-data collection -
-
-data preprocessing -
+Invasion culturomics is an emerging field of study that utilizes digital data existing on the Internet to reveal the human dimension of nonindigenous species (NIS) invasions. Although hypothetical approaches have been used to examine explanatory variables that predict the amount of public attention by using proxies, it has been difficult to observe direct associations between these variables. Here, we aimed to deepen our understanding of the relationship between people and NIS by analyzing the content of texts about NIS on social media, and by clarifying the context and aspects to which public attention is directed. Specifically, we quantified tweets about NIS to identify popular NIS that attract a lot of public attention on Twitter. We also identified hidden topics in which NIS names occurred by applying topic modeling to tweets, and we investigated the topic distribution over popular NIS. A relatively small number of species were selected as popular NIS for further analysis, and 25 hidden topics were identified from all the tweets used in the analysis. The topic distribution over popular NIS had three patterns across taxonomic groups: (1) biased among topics but consistent within taxonomic groups; (2) relatively even among topics and consistent within taxonomic groups; and (3) not consistent within taxonomic groups and with biases differing among species. These findings can provide important insights into the formulation of a better strategy for NIS management by approaching the social and human dimensions of NIS invasion; such a strategy would include information dissemination, environmental education, and management campaigns. Our methodological framework can be used to address other important environmental topics that are attracting public attention and in which the objects have similar compositions (e.g., species of disease pathogens or types of marine debris).
 
 ## Contents of the Repository
 
@@ -64,25 +59,4 @@ data preprocessing -
 |table |Spreadsheet |Table-01 |All identified topics from the LDA inference, their given name and the top 10 frequently occurring terms composing each topic (all terms were translated into English from Japanese). |
 |table |Spreadsheet |Table-S01 |All identified topics from the LDA inference, their given name and the top 10 frequently occurring terms composing each topic (in Japanese). |
 |table |Spreadsheet |Table-S02 |All invasive alien species (IAS) searched all over the tweets to quantify their occurrence in them. -> hittedとその数は列作ってわかるようにする。 |
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
