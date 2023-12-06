@@ -12,7 +12,7 @@ Invasion culturomics is an emerging field of study that utilizes digital data ex
 ## Contents of the Repository
 
 | Dir | Type | File Name | Description |
-|:-------|:---|:---|:---|
+|:---|:---|:---|:---|
 |R  |R script |01-nis-list-compilation.R  |Script for organizing data on NIS copied from NIES website (https://www.nies.go.jp/biodiversity/invasive/) |
 |R  |R script |02-tweet-collection.R      |Script for retrieving Tweets data through Twitter academic API by using get_all_tweets function from the academictwitteR package of R. |
 |R  |R script |03-tweet-filtering.R       |Script to automatically exclude unnecessary tweets such as retweets. |
@@ -21,44 +21,17 @@ Invasion culturomics is an emerging field of study that utilizes digital data ex
 |R  |R script |06-tweet-tokenization.R    |Script for morphological analysis of text in the tweet. |
 |R  |R script |07-token-cleansing.R       |Script for XXXX |
 |R  |R script |08-token-cutting.R         |Script to exclude tweets with an extremely low (less than 0.001% of all tweets) or high (more than 15% of all tweets) frequency of occurrence among all tweets. |
-|R  |R script |09-stopword-basic.R        |Script for XXXX |
-|R  |R script |10-stopword-general.R      |Script for XXXX |
-|R  |R script |11-stopword-original.R     |Script for XXXX |
-|R  |R script |12-lda-trial-examination.R |Script for XXXX |
-|R  |R script |13-lda-tuning-automatic.R  |Script for XXXX |
-|R  |R script |14-lda-tuning-manual.R     |Script for XXXX |
-|R  |R script |15-lda-model-inference.R   |Script for XXXX |
-|R  |R script |16-lda-topic-overview.R    |Script for XXXX |
-|R  |R script |17-tweet-ias-occurrence.R  |Script for XXXX |
-|R  |R script |18-count-topic-assoc.R     |Script for XXXX |
-|R  |R script |19-topic-dissimilarity.R   |Script for XXXX |
-|fig |figure | | |
-|fig |figure | | |
-|fig |figure | | |
-|fig |figure | | |
-|fig-manual |figure | | |
-|fig-manual |figure | | |
-|fig-suppl |figure | | |
-|fig-suppl |figure | | |
-|fig-suppl |figure | | |
-|fig-suppl |figure | | |
-|fig-suppl |figure | | |
-|fig |figure |Fig-S01 |Results of the ldatuning in the ldatuning package |
-|fig |figure |Fig-S02 |WordClouds presenting Japanese terms by size in their occurrence probability in each topic |
-|fig |figure |Fig-S03 |Occurring temporal trends of each topic between XXXX and XXXX |
-|fig |figure |Fig-03 |Rank change of topics through three periods (XXXX — XXXX, XXXX — XXXX and XXXX — XXXX) |
-|fig |figure |Fig-04 |Top 30 frequently occurred IAS in the tweets |
-|fig |figure |Fig-S04 |Top 30 frequently occurred species in the each biological group in the tweets (1 — 8) |
-|fig |figure |Fig-05 |Boxplot comparing biological group |
-|fig |figure |Fig-S05 |Boxplot comparing vertebrate |
-|fig |figure |Fig-S06 |Boxplot comparing big group |
-|fig |figure |Fig-06 |Heatmap showing topic distribution over aggregated tweets mentioned IAS (with dendrogram) |
-|fig |figure |Fig-07 |Heatmap showing topic distribution over top 30 frequently occurred IAS (without dendrogram) |
-|fig-manual |figure |Fig-01 |Graphical abstract of the flow of analysis design |
-|fig-manual |figure |Fig-02 |Graphical model of latent Dirichlet allocation applied to big tweets data |
-|table |Spreadsheet |Table-01 |All identified topics from the LDA inference, their given name and the top 10 frequently occurring terms composing each topic (all terms were translated into English from Japanese). |
-|table |Spreadsheet |Table-S01 |All identified topics from the LDA inference, their given name and the top 10 frequently occurring terms composing each topic (in Japanese). |
-|table |Spreadsheet |Table-S02 |All invasive alien species (IAS) searched all over the tweets to quantify their occurrence in them. -> hittedとその数は列作ってわかるようにする。 |
+|R  |R script |09-stopword-basic.R        |Script to remove stop words by using the list of slothlib which is open for public. |
+|R  |R script |10-stopword-general.R      |Script to remove stop words which automatically and manually selected from a corpus created by newly retrieved general tweets. |
+|R  |R script |11-stopword-original.R     |Script to remove original stop words which manually selected from the corpus created from the tweets related to NIS. |
+|R  |R script |12-lda-trial-examination.R |This script is used any steps through the data preprocessing to check the validation of the LDA results. |
+|R  |R script |13-lda-tuning-automatic.R  |Script for examining the range of the appropriate number of topics, K, by checking three indexes.  |
+|R  |R script |14-lda-tuning-manual.R     |Script for examining and determine the appropriate number of topics, K, by checking the results of LDA. |
+|R  |R script |15-lda-model-inference.R   |Script to implement LDA inference by setting finally fixed K. |
+|R  |R script |16-lda-topic-overview.R    |Script for examining the overview of identified topics and their characteristics. |
+|R  |R script |17-tweet-ias-occurrence.R  |Script for summarize and visualize the number of NIS in the tweets. |
+|R  |R script |18-count-topic-assoc.R     |Script for comprehensively assessing the association between the number of NIS and topic distribution over the NISs. |
+|R  |R script |19-topic-dissimilarity.R   |Script for examining the dissimilarity among taxon. |
 
 ```
 ─ Session info ─
