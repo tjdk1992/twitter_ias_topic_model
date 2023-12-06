@@ -61,7 +61,22 @@ Invasion culturomics is an emerging field of study that utilizes digital data ex
 |table |Spreadsheet |Table-S02 |All invasive alien species (IAS) searched all over the tweets to quantify their occurrence in them. -> hittedとその数は列作ってわかるようにする。 |
 
 ```
-package           * version date (UTC) lib source
+─ Session info ─
+ setting  value
+ version  R version 4.3.1 (2023-06-16)
+ os       macOS Sonoma 14.0
+ system   x86_64, darwin20
+ ui       RStudio
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       Asia/Tokyo
+ date     2023-12-06
+ rstudio  2023.06.2+561 Mountain Hydrangea (desktop)
+ pandoc   3.1.1 @ /Applications/RStudio.app/Contents/Resources/app/quarto/bin/tools/ (via rmarkdown)
+
+─ Packages ─
+ package           * version date (UTC) lib source
  abind               1.4-5   2016-07-21 [1] CRAN (R 4.3.0)
  backports           1.4.1   2021-12-13 [1] CRAN (R 4.3.0)
  bit                 4.0.5   2022-11-15 [1] CRAN (R 4.3.0)
@@ -164,5 +179,5 @@ package           * version date (UTC) lib source
  xfun                0.40    2023-08-09 [1] CRAN (R 4.3.0)
  xml2                1.3.5   2023-07-06 [1] CRAN (R 4.3.0)
  xtable              1.8-4   2019-04-21 [1] CRAN (R 4.3.0)
-```
+ ```
 
