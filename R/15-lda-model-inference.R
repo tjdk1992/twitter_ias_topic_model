@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 16-lda-model-infer.R                                           #
+# Script Name: 15-LDA-model-inference.R                                       #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -21,17 +21,17 @@ pacman::p_load(tidyverse,   # for data manipulation
                writexl,      # to write excel sheet
                readxl,
                xtable
-)
+               )
 
 # Color palette
 pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
 ## Tokens
-tokens_finalized <- read_csv("data/tokens-06_rm-stpw-original.csv")
+token_finalized <- read_csv("data/token-finalized.csv")
 
 ## Tweets
-tweet_finalizing <- read_csv("data/tweet-04_cleansed.csv")
+tweet_finalizing <- read_csv("data-proc/tweet-04-cleaned.csv")
 
 # Data preparation ------------------------------------------------------------
 
@@ -46,9 +46,9 @@ count_original <- tweet_finalizing %>%
 # 単語数が足りなかったTweetの削除後
 count_filtered <- tweet_finalizing %>% 
   inner_join(
-    tokens_finalized %>% 
+    token_finalized %>% 
       anti_join(
-        tokens_finalized %>% 
+        token_finalized %>% 
           group_by(id_cleansed) %>% 
           summarise(n = n()) %>% 
           filter(n < 5) %>% 
@@ -75,25 +75,19 @@ count_test %>%
            label = str_c("r = ", round(v_cor, 4))) +
   theme_ipsum(base_size = 10)
 
-# Save the plot
-ggsave("fig/orig-filtered-count-correlation.png",
-       units = "mm", width = 100, height = 100)
-ggsave("fig/orig-filtered-count-correlation.eps", 
-       units = "mm", width = 100, height = 100, device = cairo_ps)
-
 # Document-term matrix---------------------------------------------------------
 
 # Remove tweets containing only 1 term
-tokens_finalized %<>% 
+token_finalized %<>% 
   anti_join(
-    tokens_finalized %>% 
+    token_finalized %>% 
       group_by(id_cleansed) %>% 
       summarise(n = n()) %>% 
       filter(n < 5) %>% 
       dplyr::select(id_cleansed),
     by = "id_cleansed")
 
-tokens_finalized %>% 
+token_finalized %>% 
   dplyr::select(id_cleansed) %>% 
   distinct()
 
@@ -101,7 +95,7 @@ tokens_finalized %>%
 tweet_finalizing %<>% 
   arrange(id_cleansed) %>% 
   inner_join(
-    tokens_finalized %>% 
+    token_finalized %>% 
       dplyr::select(id_cleansed) %>% 
       arrange(id_cleansed) %>% 
       distinct(.keep_all = TRUE),
@@ -109,10 +103,10 @@ tweet_finalizing %<>%
   mutate(id_finalized = row_number())
 
 # Export final tweets
-write_csv(tweet_finalizing, "data/tweet-05_finalized.csv")
+write_csv(tweet_finalizing, "data/tweet-finalized.csv")
 
 # Create DTM
-dtm_finalized <- tokens_finalized %>% 
+dtm_finalized <- token_finalized %>% 
   group_by(id_cleansed, term) %>% 
   summarise(count = n()) %>% 
   ungroup() %>% 
@@ -141,10 +135,10 @@ topicModel <- LDA(dtm_finalized,
 tmResult <- topicmodels::posterior(topicModel)
 
 # term-topic distribution
-write_csv(as_tibble(tmResult$terms), "data/lda-output-01_topic-term.csv")
+write_csv(as_tibble(tmResult$terms), "data/LDA-topic-term.csv")
 
 # topic-document distribution (not being use in this study)
-write_csv(as_tibble(tmResult$topics), "data/lda-output-02_doc-topic.csv")
+write_csv(as_tibble(tmResult$topics), "data/LDA-doc-topic.csv")
 
 # 1 topic / 1 document distribution (being used in this study) with tweet info
 tweet_finalizing %>% 
@@ -152,10 +146,10 @@ tweet_finalizing %>%
          nam_tp = if_else(topic <= 9, "0", ""),
          topic = str_c("TP", nam_tp, topic)) %>% 
   dplyr::select(-nam_tp) %>% 
-  write_csv("data/lda-output-03_doc-topic-tweet.csv")
+  write_csv("data/LDA-doc-topic-tweet.csv")
 
 # Table of terms contained in each topic
 topicModel %>% 
   topicmodels::terms(50) %>% 
   as.data.frame() %>% 
-  write_xlsx("data/lda-output-04_topic-top50-terms.xlsx")
+  write_xlsx("data/LDA-topic-top-term.xlsx")

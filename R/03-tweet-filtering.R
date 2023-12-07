@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 04-tweet-filter.R                                              #
+# Script Name: 03-tweet-filtering.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -23,8 +23,8 @@ pacman::p_load(tidyverse, # for data manipulation
                )
 
 # Data
-tweet_filtering <- read_csv("data/tweet-01_binded.csv")
-dat_ias_ja <- read_csv("data/basic-ias-info.csv")
+tweet_filtering <- read_csv("data-proc/tweet-01-binded.csv")
+NIS_all <- read_csv("data/NIS-compiled.csv")
 
 # Prepare raw data ------------------------------------------------------------
 
@@ -36,7 +36,7 @@ tweet_filtering %<>%
   mutate(code_ias = str_replace_all(MyFile, 
                                     "data-raw/doc-tweet-ias/doc-tweet-", 
                                     "")) %>% 
-  left_join(dat_ias_ja %>% 
+  left_join(NIS_all %>% 
               dplyr::select(code_ias,
                             name_ja,
                             name_sp), 
@@ -62,7 +62,7 @@ tweet_filtering %<>%
 # Tweetの確認
 tweet_filtering 
 
-# 侵入はgeneralな侵入（例：子猫が家に侵入）に使われすぎるので含めない
+# Remove tweets including ""invad*
 tweet_filtering %<>% 
   filter(str_detect(text, "外来|移入|帰化"))
 
@@ -73,28 +73,25 @@ tweet_filtering %<>%
   dplyr::select(-rm_dup_sp) 
 
 # Screen by language
-## 言語の集計
-table(tweet_filtering$lang)
-## Remove tweets written in non-Japanese language
-tweet_filtering %<>% dplyr::select(-lang) 
+tweet_filtering %<>% dplyr::select(-lang) # limit to Japanese
 
 # Screen by the Type
-## Check the type
+# Check the type
 table(tweet_filtering$type, useNA = "always")
 
-## Replace NA
+# Replace NA
 tweet_filtering %<>% mutate(type = replace_na(type, "normal"))
 
-## Remove retweeted tweet
+# Remove retweeted tweet
 tweet_filtering %<>% filter(type != "retweeted") 
 
 #-----------------------------------------------------------------------------#
-# 1つのuser accountから多数の同一tweetがされている場合は宣伝であったりbotである
-# 可能性が高い。この場合、その複数のtweetに起因する過大評価を避けるために、
-# その一番最初のtweet（年単位）のみを解析に含めることにする。
+# If there are many identical tweets from a single user account, it is likely 
+# that it is a promotion or a bot. In this case, only the very first tweet (in years) 
+# is included in the analysis to avoid overestimation due to multiple tweets.
 #-----------------------------------------------------------------------------#
 
-# userとtextの集計
+# Summarize by user and text
 tweet_filtering %>% 
   mutate(tweet_rm = str_c(author_id, "_", name_sp, "_", text)) %>% 
   group_by(tweet_rm) %>% 
@@ -102,7 +99,7 @@ tweet_filtering %>%
   arrange(desc(n)) %>% 
   head(20)
 
-# 重複を削除
+# Remove duplicate
 tweet_filtering %<>% 
   mutate(tweet_rm = str_c(author_id, "_", name_sp, "_", text)) %>% 
   group_by(tweet_rm, year) %>%
@@ -114,4 +111,4 @@ tweet_filtering %<>%
 # Export data
 tweet_filtering %>% 
   mutate(id_filtered = row_number()) %>% 
-  write_csv("data/tweet-02_filtered.csv")
+  write_csv("data-proc/tweet-02-filtered.csv")

@@ -1,10 +1,45 @@
+#-----------------------------------------------------------------------------#
+# Script Name: 19-NIS-topic-dissimilarity.R                                   #
+#                                                                             #
+# Author: Daiki Tomojiri                                                      #
+# Email: tomojiri.daiki@gmail.com                                             #
+#                                                                             #
+# This R script calculate the Bray-Curtis dissimilarity among taxon           #
+# according to topic distribution over NIS.                                   #
+#-----------------------------------------------------------------------------#
+
+# Setup -----------------------------------------------------------------------
+
+# Initialization
+rm(list = ls())
+gc(); gc();
+
+# Packages
+pacman::p_load(tidyverse,  # for data manipulation
+               hrbrthemes, # for nice visualization
+               magrittr, 　# for data manipulation
+               pals,
+               patchwork,  # to use color palette
+               reshape2,
+               rstatix,
+               vegan,
+               glue,
+               ggtext
+               )
+
+# Color palette
+pal_orig <- pals::cols25(7)[c(5, 4, 7, 2, 1, 6, 3)]
+
+# Data
+NIS_topic <- read_csv("data/NIS-popular-topic.csv")
+
 # Topicの類似度(pairwise) -----------------------------------------------------
 
 # 種レベルのトピック分布
-df_dissim <- theta_topic %>% 
+df_dissim <- NIS_topic %>% 
   dplyr::select(TP01:TP25) %>% 
   as.data.frame()
-rownames(df_dissim) <- theta_topic$name_sp
+rownames(df_dissim) <- NIS_topic$name_sp
 
 # Calculate Bray-Curtis dissimilarlity
 df_bray <- df_dissim %>% 
@@ -19,10 +54,10 @@ df_bray <- df_dissim %>%
 # Remove combination between different taxonomimc group
 df_bray_pairwise <- df_bray %>% 
   left_join(
-    ias_popular %>% 
+    NIS_topic %>% 
       transmute(var1 = name_sp, group_biol_1 = group_biol), by = "var1") %>% 
   left_join(
-    ias_popular %>% 
+    NIS_topic %>% 
       transmute(var2 = name_sp, group_biol_2 = group_biol), by = "var2") %>% 
   mutate(check = if_else(group_biol_1 == group_biol_2, "T", "F")) %>% 
   filter(check == "T") %>% 
@@ -154,15 +189,21 @@ vis_tukey[[1]] + vis_tukey[[2]] + vis_tukey[[3]] +
   theme(legend.position = 'none') # 縦横比を設定し凡例をまとめ
 
 # Save the visualized result
-ggsave("fig-suppl/forestplot_turkeyHSD-significance.png",
+ggsave("fig-supp/forestplot_turkeyHSD-significance.png",
        units = "mm", width = 170, height = 200)
-ggsave("fig-suppl/forestplot_turkeyHSD-significance.eps",
+ggsave("fig-supp/forestplot_turkeyHSD-significance.eps",
        units = "mm", width = 170, height = 200, device = cairo_ps)
 
 # Topicの類似度(groupからの距離) -----------------------------------------------------
+
+# List of biological groups
 l_biol <- c("mammal", "bird", "reptile", "amphibian", 
             "fish", "invertebrate", "plant")
+
+# Prepare empty list
 vis_bray <- list()
+
+# Loop
 for (i in 1:length(l_biol)) {
   biol <- l_biol[i]
   vis_bray[[i]] <- df_bray_pairwise %>%
@@ -189,14 +230,16 @@ for (i in 1:length(l_biol)) {
 # Layout and save the visualized result
 ((vis_bray[[1]] | vis_bray[[2]]) /
     (vis_bray[[3]] | vis_bray[[4]])) & theme(legend.position = 'none')
-ggsave("fig-suppl/boxplot-species-dissimilarity_A.png",
+
+ggsave("fig-supp/boxplot-species-dissimilarity_A.png",
        units = "mm", width = 170, height = 200)
-ggsave("fig-suppl/boxplot-species-dissimilarity_A.eps",
+ggsave("fig-supp/boxplot-species-dissimilarity_A.eps",
        units = "mm", width = 170, height = 200, device = cairo_ps)
 
 ((vis_bray[[5]] | vis_bray[[6]]) / 
     vis_bray[[7]]) & theme(legend.position = 'none')
-ggsave("fig-suppl/boxplot-species-dissimilarity_B.png",
+
+ggsave("fig-supp/boxplot-species-dissimilarity_B.png",
        units = "mm", width = 170, height = 200)
-ggsave("fig-suppl/boxplot-species-dissimilarity_B.eps",
+ggsave("fig-supp/boxplot-species-dissimilarity_B.eps",
        units = "mm", width = 170, height = 200, device = cairo_ps)

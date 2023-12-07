@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 12-stpw-rm-original.R                                          #
+# Script Name: 11-stopword-removal-original.R                                 #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -21,8 +21,8 @@ pacman::p_load(tidyverse,
                readxl)
 
 # Data
-token_rm_stpw_original <- read_csv("data/tokens-05_rm-stpw-general.csv")
-token_ias <- read_csv("data/tokens-01_original.csv")
+token_rm_stpw_original <- read_csv("data-proc/token-05-general-stopword-removed.csv")
+token_created <- read_csv("data/token-01-created.csv")
 #------------------------------------------------------------------------------
 
 # Original stopwordsの除外（名詞）
@@ -71,16 +71,16 @@ token_rm_stpw_original %>%
   arrange(desc(freq)) %>% 
   mutate(freq_doc = freq / len_tweet * 100) %>% 
   filter(freq_doc > 0.1) %>%
-  left_join(token_ias %>% 
+  left_join(token_created %>% 
               dplyr::select(-id_cleansed) %>% 
               distinct(.keep_all = TRUE), by = "term") %>% 
   filter(hinshi == "名詞") %>% # 動詞と形容詞は自動でジャッジする
   mutate(judge = "") %>% 
-  write_xlsx("data-manual/token-rm-stpw-checking.xlsx")
+  write_xlsx("data-manual/token-stopword-unselected.xlsx")
 
 # Check the selected stop words
 stopword_noun_original <- 
-  read_excel("data-manual/token-rm-stpw-checked.xlsx", sheet = 1)
+  read_excel("data-manual/token-stopword-selected.xlsx", sheet = 1)
 
 # Summarise
 stopword_noun_original %>% 
@@ -112,4 +112,4 @@ token_rm_stpw_original %<>%
   filter(term != "もも") # 〜も〜も
 
 # データの書き出し
-write_csv(token_rm_stpw_original, "data/tokens-06_rm-stpw-original.csv")
+write_csv(token_rm_stpw_original, "data-proc/token-06-original-stopword-removed.csv")

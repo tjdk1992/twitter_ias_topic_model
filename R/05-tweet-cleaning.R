@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 06-tweet-cleanse.R                                             #
+# Script Name: 05-tweet-cleaning.R                                            #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -23,13 +23,13 @@ pacman::p_load(tidyverse, # for data manipulation
                )
 
 # Data
-tweet_cleansing <- read_csv("data/tweet-03_screened.csv")
-ias_ja <- read_csv("data/basic-ias-info.csv")
+tweet_cleaning <- read_csv("data-proc/tweet-03-screened.csv")
+NIS_all <- read_csv("data/NIS-compiled.csv")
 
 # Prepare basic data-----------------------------------------------------------
 
 # Select necessary columns
-tweet_cleansing %<>% 
+tweet_cleaning %<>% 
   dplyr::select(id_screened,
                 name_ja, 
                 name_sp,
@@ -38,13 +38,13 @@ tweet_cleansing %<>%
                 text)
 
 # 扱いやすくするために可能なものは半角にしてスペースは除外する。
-tweet_cleansing %<>% 
+tweet_cleaning %<>% 
   mutate(text = stringi::stri_trans_general(text, "Fullwidth-Halfwidth"))
 
 # Cleansing tweet--------------------------------------------------------------
 
 # tweetの確認
-tweet_cleansing %>% 
+tweet_cleaning %>% 
   sample_n(1000) %>% 
   pull(text)
 
@@ -54,16 +54,16 @@ tweet_cleansing %>%
 # -----------------------------------------------------------------------------
 
 # Remove hash tags, mention tags, meta-chr and spaces
-tweet_cleansing %<>% 
+tweet_cleaning %<>% 
   mutate(text = str_replace_all(text, c("#[^\\s#]*" = "", # Hash tag
                                         "@[^\\s@]*" = "", # Mention
                                         "\n" = "",
                                         "\r" = "",
                                         "\t" = "",
                                         "[:blank:]" = "")))
-tweet_cleansing
+tweet_cleaning
 # Remove date and other general expression
-tweet_cleansing %<>% 
+tweet_cleaning %<>% 
   mutate(text = str_replace_all(
     text, c("\\([月火水木金土日]\\)" = "", # 曜日
             "[月火水木金土日]曜日" = "",
@@ -72,7 +72,7 @@ tweet_cleansing %<>%
     )))  # 改行文字
 
 # Remove searched query
-term_query <- c(ias_ja %>% 
+term_query <- c(NIS_all %>% 
                   mutate(n_chr = nchar(KATAKANA)) %>% 
                   arrange(desc(n_chr)) %>% 
                   mutate(KATAKANA = 
@@ -86,7 +86,7 @@ term_query <- c(ias_ja %>%
 # 削除
 for (i in 1:length(term_query)) {
   term_rm <- term_query[i]
-  tweet_cleansing %<>% mutate(text = str_replace_all(text, term_rm, ""))
+  tweet_cleaning %<>% mutate(text = str_replace_all(text, term_rm, ""))
 }
 
 # メディアの引用が多いので、この時点で除外しておく。
@@ -99,7 +99,7 @@ for (i in 1:length(term_query)) {
 
 ## URLを貼らずに記事のタイトルだけを貼ったようなtweetが散見されるため。
 ## 抽出したstringsの除外はtweet_normal_wo_URLにも適用する。
-str_rm <- tweet_cleansing %>% 
+str_rm <- tweet_cleaning %>% 
   filter(str_detect(text, "https?://.*[a-zA-Z0-9]")) %>% 
   mutate(text = str_replace_all(text, 
                                 c("https?://.*[a-zA-Z0-9]" = "",
@@ -202,10 +202,10 @@ str_rm %>%
   dplyr::select(-text_check) %>% 
   mutate(n_chr = nchar(text)) %>% 
   filter(n != 1) %>%
-  write_xlsx("data-manual/term-rm-tweet-checking.xlsx")
+  write_xlsx("data-manual/tweet-cleaning-unselected.xlsx")
   # 記事関連を全て除外
 
-str_rm <- read_excel("data-manual/term-rm-tweet-checked.xlsx")
+str_rm <- read_excel("data-manual/tweet-cleaning-selected.xlsx")
 
 list_str_rm <- rbind(
   str_rm %>% 
@@ -220,12 +220,12 @@ list_str_rm <- rbind(
 
 for (i in 1:length(list_str_rm)) {
   pattern = list_str_rm[i]
-  tweet_cleansing %<>% 
+  tweet_cleaning %<>% 
     mutate(text = str_replace_all(text, pattern = stringr::fixed(pattern), ""))
 }
 
 # データの書き出し
-tweet_cleansing %>% 
+tweet_cleaning %>% 
   mutate(
     # URLの削除
     text = str_replace_all(text, "https?://.*[a-zA-Z0-9]", ""),
@@ -235,4 +235,4 @@ tweet_cleansing %>%
     id_cleansed = row_number()
   ) %>% 
   # 書き出し
-  write_csv("data/tweet-04_cleansed.csv")
+  write_csv("data-proc/tweet-04-cleaned.csv")

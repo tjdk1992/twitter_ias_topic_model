@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 14-lda-test-run.R                                              #
+# Script Name: 13-LDA-tuning-automatic.R                                      #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -25,13 +25,13 @@ pacman::p_load(tidyverse,
                )
 
 # Data
-tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
+token_finalized <- read_csv("data/token-finalized.csv")
 
 # Run ldatuning ---------------------------------------------------------------
 
 # DTMの作成
-dtm_rm_stpw_original <- tokens_rm_stpw_original %>% 
-  anti_join(tokens_rm_stpw_original %>% 
+dtm_rm_stpw_original <- token_finalized %>% 
+  anti_join(token_finalized %>% 
               group_by(id_cleansed) %>% 
               summarise(n = n()) %>% 
               filter(n < 5) %>% 
@@ -57,12 +57,12 @@ res_ldatuning <- FindTopicsNumber(
 
 # Resultの書き出し
 write_csv(as.data.frame(res_ldatuning),
-          "data-manual/ldatuning-rm-stpw-original.csv")
+          "data/LDA-tuning-automatic.csv")
 
 # Visualize the results -------------------------------------------------------
 
 # Read the results 
-res_ldatuning <- read_csv("data-manual/ldatuning-rm-stpw-original.csv")
+res_ldatuning <- read_csv("data/LDA-tuning-automatic.csv")
 
 # Visualize the results
 res_ldatuning %>% 
@@ -94,9 +94,7 @@ res_ldatuning %>%
           strip.text = element_blank())
 
 # Save the visualized result
-ggsave("fig-suppl/ldatuning-output.png",
+ggsave("fig-supp/ldatuning-output.png",
        units = "mm", width = 180, height = 180)
-ggsave("fig-suppl/ldatuning-output.eps",
+ggsave("fig-supp/ldatuning-output.eps",
        units = "mm", width = 180, height = 180, device = cairo_ps)
-
-

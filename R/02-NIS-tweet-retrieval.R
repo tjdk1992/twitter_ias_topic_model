@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 02-tweet-retrieval.R                                           #
+# Script Name: 02-NIS-tweet-retrieval.R                                       #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -19,27 +19,28 @@ pacman::p_load(tidyverse,       # for data manipulation
                )
 
 # Data
-dat_ias_ja <- read_csv("data/basic-ias-info.csv")
+NIS_all <- read_csv("data/NIS-compiled.csv")
 
 # Retrieve tweets -------------------------------------------------------------
-
-# Check the list of IAS
-str(dat_ias_ja) # KATAKANAが検索対象のTermである。
 
 # Prepare bearer token
 bearer_token <- "<ADD MY BEARER TOKEN>" # This is a secret sequence.
 
 # Prepare search query
-ias_ja <- dat_ias_ja$KATAKANA
+common_NIS <- NIS_all$KATAKANA
 query_common <- "(移入 OR 帰化 OR 外来 OR 侵入)"
+
+# Retrive tweets
+
 list_ias_tweet <- list()
-for (i in 1:length(ias_ja)) {
-  ias_all_ja <- unlist(dat_ias_ja$KATAKANA, use.name = FALSE)
-  ias_all_code <- unlist(dat_ias_ja$code_ias, use.name = FALSE)
+
+for (i in 1:length(common_NIS)) {
+  ias_all_ja <- unlist(NIS_all$KATAKANA, use.name = FALSE)
+  ias_all_code <- unlist(NIS_all$code_ias, use.name = FALSE)
   name_ias <- ias_all_ja[i]
   code_ias <- ias_all_code[i]
   t_query <- str_c(query_common, " ", name_ias)
-  t_path <- str_c("data-raw/doc-tweet-ias/doc-tweet-", code_ias)
+  t_path <- str_c("data-raw/tweet-NIS/doc-", code_ias) # save to data-raw
   tweet_ias <- 
     get_all_tweets(query = t_query,
                    start_tweets = "2008-01-01T00:00:00Z",
@@ -54,34 +55,36 @@ for (i in 1:length(ias_ja)) {
 # Bind JSON into data frame ---------------------------------------------------
 
 # Prepare essential data
-path_dir_doc <- "data-raw/doc-tweet-ias"
+path_dir_doc <- "data-raw/tweet-NIS"
 dataframe_paths <- list.files(path = path_dir_doc, full.names = T)
 
-# tweetのJSONをdata.frameにbinding
+# Bind JSON into data frame
 tweet_df_binded <- data.frame()
 for (i in 1:length(dataframe_paths)) {
-  t_tweet_tidy_binded <- data.frame() # 仮のデータフレーム
-  path_dir_ias <- str_c(dataframe_paths[i], "/") # bindするJSONのパス
-  # bind_tweets()でJSONをbindしてdfへ
+  # Temporal data frame
+  t_tweet_tidy_binded <- data.frame()
+  path_dir_ias <- str_c(dataframe_paths[i], "/") # path to JSONs
+  # Bind JSON by bind_tweets()
   t_tweet_df_binded <- try(bind_tweets(data_path = path_dir_ias),
                            silent = FALSE)
-  # エラー対応
+  # Addressing errors
   if (nrow(t_tweet_df_binded)!= 0 & class(t_tweet_df_binded) != "try-error") {
-    # listとdfで入れ子になっているreference_tweetsを取り出す
+    # Extract reference_tweets from a data frame in a list
     t_referenced_tweets <- data.frame() # 仮のデータフレーム
-    t_list <- data.frame() # 仮のデータフレーム
+    # Temporal data frame
+    t_list <- data.frame()
     for (j in 1:length(t_tweet_df_binded$text)) {
       if (is.null(unlist(t_tweet_df_binded$referenced_tweets[[j]]))) {
-        # 空の場合は各列を明示的に作成してNAを入れる。
+        # If empty, create column with containing NA
         t_list <- data.frame(type = NA, id_ref = NA)
       } else {
-        # 中身がある場合はtypeとidを取り出す
+        # If not empty, extract "type" and "id"
         t_list <- data.frame(
           type = unlist(t_tweet_df_binded$referenced_tweets[[j]][1], 
                         use.names = FALSE),
           id_ref = unlist(t_tweet_df_binded$referenced_tweets[[j]][2], 
                           use.names = FALSE))
-        # 稀にquotedかつretweetedのように複数行あるので、それを1行にまとめる
+        # If there are multiple columns such as quoted and retweeted, merge them.
         if (nrow(t_list) != 1) {
           t_list <- data.frame(
             type = paste(t_list$type, collapse = "-"),
@@ -104,4 +107,4 @@ for (i in 1:length(dataframe_paths)) {
 # Write in csv format
 tweet_df_binded %>% 
   mutate(id_raw = row_number()) %>% 
-  write_csv("data/tweet-01_binded.csv")
+  write_csv("data-proc/tweet-01-binded.csv")

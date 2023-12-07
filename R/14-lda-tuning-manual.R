@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 15-lda-test-run.R                                              #
+# Script Name: 14-LDA-tuning-automatic.R                                      #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -30,13 +30,13 @@ pacman::p_load(tidyverse, # for data manipulation
 pal_orig <- c(rep(pals::cols25(25), 2))
 
 # Data
-tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
+token_finalized <- read_csv("data/token-finalized.csv")
 
 # Run ldatuning ---------------------------------------------------------------
 
 # DTMの作成
-dtm_rm_stpw_original <- tokens_rm_stpw_original %>% 
-  anti_join(tokens_rm_stpw_original %>% 
+dtm_rm_stpw_original <- token_finalized %>% 
+  anti_join(token_finalized %>% 
               group_by(id_cleansed) %>% 
               summarise(n = n()) %>% 
               filter(n < 5) %>% 
@@ -60,7 +60,7 @@ for (K in seq(10, 60, by = 5)) {
                                    iter = 1000, 
                                    verbose = 25, 
                                    seed = 123))
-  name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K", 
+  name_path <- str_c("data-manual/LDA-tuning-manual-A/LDA-tuning-manual-K", 
                      K,
                      ".xlsx")
   as.data.frame(terms(topicModel, 20)) %>% 
@@ -78,7 +78,7 @@ for (K in seq(15, 35, 1)) {
                                    iter = 1000, 
                                    verbose = 25, 
                                    seed = 123))
-  name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K", 
+  name_path <- str_c("data-manual/LDA-tuning-manual-B/LDA-tuning-manual-K", 
                      K,
                      ".xlsx")
   as.data.frame(terms(topicModel, 20)) %>% 
@@ -97,7 +97,7 @@ for (rn in c(123, 135, 159, 246, 369)) {
                                      iter = 1000, 
                                      verbose = 25, 
                                      seed = rn))
-    name_path <- str_c("data-manual/lda-manual-tuning2/TP-manual-tuning-K25_seed", 
+    name_path <- str_c("data-manual/LDA-tuning-manual-C/LDA-tuning-manual-K25_seed", 
                        rn,
                        ".xlsx")
     as.data.frame(terms(topicModel, 20)) %>% 

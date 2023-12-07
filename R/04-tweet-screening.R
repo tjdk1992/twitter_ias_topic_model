@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 05-tweet-screen.R                                              #
+# Script Name: 04-tweet-screening.R                                           #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -22,8 +22,8 @@ pacman::p_load(tidyverse, # for data manipulation
                )
 
 # Data
-tweet_screening <- read_csv("data/tweet-02_filtered.csv")
-dat_ias_ja <- read_csv("data/basic-ias-info.csv")
+tweet_screening <- read_csv("data-proc/tweet-02-filtered.csv")
+NIS_all <- read_csv("data/NIS-compiled.csv")
 
 # 検索ワード-------------------------------------------------------------------
 
@@ -31,14 +31,14 @@ dat_ias_ja <- read_csv("data/basic-ias-info.csv")
 pull(sample_n(tweet_screening, 1000), text)
 
 # 外来生物名
-ias_ja <- dat_ias_ja %>% 
+common_NIS <- NIS_all %>% 
   mutate(n_chr = nchar(KATAKANA)) %>% 
   arrange(desc(n_chr)) %>% 
   pull(KATAKANA)
 
-term_extract_A <- c(str_c("外来", ias_ja),
-                    str_c("移入", ias_ja),
-                    str_c("帰化", ias_ja))
+term_extract_A <- c(str_c("外来", common_NIS),
+                    str_c("移入", common_NIS),
+                    str_c("帰化", common_NIS))
 
 # 外来種を指す単語
 taxon_ja <- c("種", "生物", "動物", "植物", "動植物",
@@ -65,4 +65,4 @@ tweet_searched %<>%
 # Export data
 tweet_searched %>% 
   mutate(id_screened = row_number()) %>% 
-  write_csv("data/tweet-03_screened.csv")
+  write_csv("data-proc/tweet-03-screened.csv")

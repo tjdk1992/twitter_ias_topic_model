@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 07-tweet-tokenize.R                                            #
+# Script Name: 06-tweet-tokenization.R                                        #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -20,7 +20,7 @@ pacman::p_load(tidyverse, # for data manipulation
                RMeCab)    # for tokenization
 
 # Data
-tweet_tokenizing <- read_csv("data/tweet-04_cleansed.csv")
+tweet_tokenizing <- read_csv("data-proc/tweet-04-cleaned.csv")
 
 # Tokenization-----------------------------------------------------------------
 
@@ -42,4 +42,4 @@ token_ias <- purrr::pmap_df(list(nv = list_token_ias,
                             })
 
 # Export tokens
-write_csv(token_ias, "data/tokens-01_original.csv")
+write_csv(token_ias, "data-proc/token-01-created.csv")

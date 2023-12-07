@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 23-comprehensive-assessment.R                                  #
+# Script Name: 19-NIS-topic-distribution.R                                  #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -18,22 +18,23 @@ gc(); gc();
 pacman::p_load(tidyverse,  # for data manipulation
                hrbrthemes, # for nice visualization
                magrittr, 　# for data manipulation
-               pals,
                patchwork,  # to use color palette
                reshape2,
                rstatix,
-               vegan
-)
+               vegan,
+               glue,
+               ggtext
+               )
 
 # Color palette
 pal_orig <- pals::cols25(7)[c(5, 4, 7, 2, 1, 6, 3)]
 
 # Data
 # LDA output
-theta <- read_csv("data/lda-output-03_doc-topic-tweet.csv")
+theta <- read_csv("data/LDA-doc-topic-tweet.csv")
 
 # Tweets counts
-ias_popular <- read_csv("data/ias-popular.csv")
+ias_popular <- read_csv("data/NIS-popular.csv")
 
 # Data preparation ------------------------------------------------------------
 
@@ -59,10 +60,14 @@ theta_topic <- theta %>%
 theta_topic[is.na(theta_topic)] <- 0
 
 # Merge count data to LDA output
-theta_topic <- inner_join(ias_popular, theta_topic, by = "name_sp")
+NIS_topic <- inner_join(ias_popular, theta_topic, by = "name_sp")
 
-# Limit popular NIS by limiting to those with >100 tweets
-theta_topic %>% 
+# Export the association data
+write_csv(NIS_topic, "data/NIS-popular-topic.csv")
+
+# Topic distribution over biological groups -----------------------------------
+
+NIS_topic %>% 
   pivot_longer(cols = TP01:TP25,
                names_to = "topic",
                values_to = "freq") %>% 
@@ -74,32 +79,24 @@ theta_topic %>%
   facet_wrap(. ~ group_biol, ncol = 2) +
   theme_ipsum()
 
-# Save the visualized result
-ggsave("fig-suppl/barplot_topic-group-distribution.png",
-       units = "mm", width = 170, height = 230)
-ggsave("fig-suppl/barplot_topic-group-distribution.eps",
-       units = "mm", width = 170, height = 230, device = cairo_ps)
+# Topic distribution over NISs ------------------------------------------------
 
-# Association visualization ---------------------------------------------------
-
-library(glue)
-library(ggtext)
-
-g_bubble_topic <- theta_topic %>% 
+g_bubble_topic <- NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
   ungroup() %>% 
-  mutate(name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
+  mutate(group_biol = str_to_title(group_biol),
+         name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
          name_block = if_else(str_detect(name_sp, "subspp."), "subsp.",
                               if_else(str_detect(name_sp, "spp."), "spp.", "")),
          name_block = str_replace_all(name_block, "subsp.", "subspp."),
          name_show = glue("<i>{name_italic}</i> {name_block}")) %>% 
-  filter(group_biol == "mammal" | 
-           group_biol == "bird" |
-           group_biol == "reptile"|
-           group_biol == "amphibian"|
-           group_biol == "fish") %>% 
+  filter(group_biol == "Mammal" | 
+           group_biol == "Bird" |
+           group_biol == "Reptile"|
+           group_biol == "Amphibian"|
+           group_biol == "Fish") %>% 
   arrange(total) %>% 
   arrange(desc(group_biol)) %>% 
   mutate(id_reorder = row_number()) %>% 
@@ -118,7 +115,7 @@ g_bubble_topic <- theta_topic %>%
         axis.text.y = element_markdown(),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"))
 
-g_bar_rank <- theta_topic %>% 
+g_bar_rank <- NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
@@ -160,12 +157,12 @@ g_bubble_topic +
   theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
 
 # Save the visualized result
-ggsave("fig-suppl/bubble-biol-ordered-category_A.png",
+ggsave("fig-supp/bubble-biol-ordered-category_A.png",
        units = "mm", width = 170, height = 230)
-ggsave("fig-suppl/bubble-biol-ordered-category_A.eps",
+ggsave("fig-supp/bubble-biol-ordered-category_A.eps",
        units = "mm", width = 170, height = 230, device = cairo_ps)
 
-g_bubble_topic <- theta_topic %>% 
+g_bubble_topic <- NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
@@ -195,7 +192,7 @@ g_bubble_topic <- theta_topic %>%
         axis.text.y = element_markdown(),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"))
 
-g_bar_rank <- theta_topic %>% 
+g_bar_rank <- NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
@@ -234,13 +231,13 @@ g_bubble_topic +
   theme(legend.position = 'bottom') # 縦横比を設定し凡例をまとめ
 
 # Save the visualized result
-ggsave("fig-suppl/bubble-biol-ordered-category_B.png",
+ggsave("fig-supp/bubble-biol-ordered-category_B.png",
        units = "mm", width = 170, height = 230)
-ggsave("fig-suppl/bubble-biol-ordered-category_B.eps",
+ggsave("fig-supp/bubble-biol-ordered-category_B.eps",
        units = "mm", width = 170, height = 230, device = cairo_ps)
 
 # ひとまとめ ------------------------------------------------------------------
-theta_topic %>% 
+NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 

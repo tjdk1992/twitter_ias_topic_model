@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 10-stpw-rm-basic.R                                             #
+# Script Name: 09-stopword-removal-basic.R                                    #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -18,7 +18,7 @@ pacman::p_load(tidyverse,
                magrittr)
 
 # Data
-token_rm_stpw_basic <- read_csv("data/tokens-03_cut.csv")
+token_rm_stpw_basic <- read_csv("data-proc/tokens-03-thinned.csv")
 
 #------------------------------------------------------------------------------
 
@@ -34,4 +34,4 @@ token_rm_stpw_basic %<>%
   anti_join(stopword_general, by = "term")
 
 ## データの書き出し
-write_csv(token_rm_stpw_basic, "data/tokens-04_rm-stpw-basic.csv")
+write_csv(token_rm_stpw_basic, "data-proc/token-04-basic-stopword-removed.csv")

@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 08-token-cleanse.R                                             #
+# Script Name: 07-token-cleaning.R                                            #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -22,7 +22,7 @@ pacman::p_load(tidyverse,
                )
 
 # Data
-token_cleansing <- read_csv("data/tokens-01_original.csv")
+token_cleaning <- read_csv("data-proc/tokens-01-created.csv")
 
 # Helper function -------------------------------------------------------------
 
@@ -39,18 +39,18 @@ viewTopTerm <- function(df_tokens, head = 5000) {
 # Automatic cleaning ----------------------------------------------------------
 
 # 品詞の選択
-token_cleansing %<>% 
+token_cleaning %<>% 
   filter(hinshi == "名詞" |
            hinshi == "動詞" |
            hinshi == "形容詞")
 
 # 日本語を正規化する。
-token_cleansing %<>% 
+token_cleaning %<>% 
   mutate(term = stri_trans_general(term, "Halfwidth-Fullwidth"),
          term = str_jnormalize(term))
 
 # 細々した不用品のクリーニング
-token_cleansing %<>% 
+token_cleaning %<>% 
   mutate(
     # 半角にしておく
     term = stri_trans_general(term, "Fullwidth-Halfwidth"),
@@ -70,17 +70,17 @@ token_cleansing %<>%
   filter(!(term == "　"))
 
 # 日本語を扱う上で半角カタカナが邪魔なので全角に変換しておく
-token_cleansing %<>% 
+token_cleaning %<>% 
   mutate(term = stri_trans_general(term, "Halfwidth-Fullwidth"))
 
 # 先頭が"ー"のものを削除
-token_cleansing %<>% mutate(term = str_replace_all(term, "^ー*", ""))
+token_cleaning %<>% mutate(term = str_replace_all(term, "^ー*", ""))
 
 # Manual cleaning (transformative) --------------------------------------------
 
 # 出現頻度が1のものは必ずノイズになるので除外する。
-token_cleansing %<>% 
-  anti_join(token_cleansing %>% 
+token_cleaning %<>% 
+  anti_join(token_cleaning %>% 
               group_by(term) %>% 
               summarise(n = n()) %>% 
               filter(n == 1) %>% 
@@ -88,8 +88,8 @@ token_cleansing %<>%
             by = "term")
 
 ## 記号は意味の解釈が困難なので除外
-token_cleansing %<>% 
-  anti_join(token_cleansing %>% 
+token_cleaning %<>% 
+  anti_join(token_cleaning %>% 
               group_by(term) %>% 
               summarise(n = n()) %>% 
               arrange(term) %>% 
@@ -110,23 +110,23 @@ kana_all <- c(kana_all, str_c(kana_all, "゛"), str_c(kana_all, "゙"))
 
 # 漢字以外の1文字のトークンは除外する。
 for (i in 1:length(kana_all)) {
-  token_cleansing %<>% 
+  token_cleaning %<>% 
     filter(term != kana_all[i])
 }
 
 # 繰り返しは鳴き声だったりして意味がないので除外
 # チェック
-filter(token_cleansing, str_detect(term, "(.)\\1{2,}")) %>% pull(term)
-filter(token_cleansing, str_detect(term, "(..)\\1{2,}")) %>% pull(term)
-filter(token_cleansing, str_detect(term, "(...)\\1{2,}")) %>% pull(term)
-filter(token_cleansing, str_detect(term, "(....)\\1{2,}")) %>% pull(term)
+filter(token_cleaning, str_detect(term, "(.)\\1{2,}")) %>% pull(term)
+filter(token_cleaning, str_detect(term, "(..)\\1{2,}")) %>% pull(term)
+filter(token_cleaning, str_detect(term, "(...)\\1{2,}")) %>% pull(term)
+filter(token_cleaning, str_detect(term, "(....)\\1{2,}")) %>% pull(term)
 
 # 2回の繰り返しは意味が取れる可能性があるのでここでは残す（例：オオコウモリ）。
-token_cleansing %<>% 
+token_cleaning %<>% 
   filter(!(str_detect(term, "(.)\\1{2,}"))) %>% 
   filter(!(str_detect(term, "(..)\\1{2,}"))) %>%
   filter(!(str_detect(term, "(...)\\1{2,}"))) %>%
   filter(!(str_detect(term, "(....)\\1{2,}")))
 
 # クリーニングが完了したデータを書き出し
-write_csv(token_cleansing, "data/tokens-02_cleansed.csv")
+write_csv(token_cleaning, "data-proc/tokens-02-cleaned.csv")

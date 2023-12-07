@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 13-lda-test-run.R                                              #
+# Script Name: 12-LDA-stopword-examination.R                                  #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -21,16 +21,21 @@ pacman::p_load(tidyverse,
                topicmodels)
 
 # Data
-tokens_rm_stpw_basic <- read_csv("data/tokens-04_rm-stpw-basic.csv")
-tokens_rm_stpw_general <- read_csv("data/tokens-05_rm-stpw-general.csv")
-tokens_rm_stpw_original <- read_csv("data/tokens-06_rm-stpw-original.csv")
+token_rm_stpw_basic <- read_csv("data-proc/token-04-basic-stopword-removed.csv")
+token_rm_stpw_general <- read_csv("data-proc/token-05-general-stopword-removed.csv")
+token_rm_stpw_original <- read_csv("data-proc/token-06-original-stopword-removed.csv")
+
+# Final decision --------------------------------------------------------------
+
+# Re-write the selected corpus for LDA inference
+write_csv(token_rm_stpw_original, "data/token-finalized.csv")
 
 # Helper function -------------------------------------------------------------
 
 # Function for creating doc-term matrix
-makeDTMatrix <- function(df_tokens) {
-  df_tokens %>% 
-    anti_join(df_tokens %>% 
+makeDTMatrix <- function(df_token) {
+  df_token %>% 
+    anti_join(df_token %>% 
                 group_by(id_cleansed) %>% 
                 summarise(n = n()) %>% 
                 # 単語が1個/1Tweetの場合は除外
@@ -49,7 +54,7 @@ makeDTMatrix <- function(df_tokens) {
 runLDAtest <- function(dtm, 
                        K_from = 15, K_to = 60, K_by = 15, 
                        seed = 123, 
-                       path_base = "data-manual/lda-stpw-test/", 
+                       path_base = "data-manual/LDA-stopword-examination/", 
                        file_name = "topic-list-stopword-rm") {
   for (K in seq(K_from, K_to, K_by)) {
     topicModel <- topicmodels::LDA(dtm,
@@ -81,23 +86,23 @@ runLDAtest <- function(dtm,
 #------------------------------------------------------------------------------
 
 # DTMの作成
-dtm_rm_stpw_basic <- makeDTMatrix(tokens_rm_stpw_basic)
-dtm_rm_stpw_general <- makeDTMatrix(tokens_rm_stpw_general)
-dtm_rm_stpw_original <- makeDTMatrix(tokens_rm_stpw_original)
+dtm_rm_stpw_basic <- makeDTMatrix(token_rm_stpw_basic)
+dtm_rm_stpw_general <- makeDTMatrix(token_rm_stpw_general)
+dtm_rm_stpw_original <- makeDTMatrix(token_rm_stpw_original)
 
 #------------------------------------------------------------------------------
 
 # 2023-05-29
-runLDAtest(dtm_rm_stpw_basic, file_name = "TP-list-rm-stpw-basic")
-runLDAtest(dtm_rm_stpw_general, file_name = "TP-list-rm-stpw-general")
-runLDAtest(dtm_rm_stpw_original, file_name = "TP-list-rm-stpw-original")
+runLDAtest(dtm_rm_stpw_basic, file_name = "stopword-basic")
+runLDAtest(dtm_rm_stpw_general, file_name = "stopword-general")
+runLDAtest(dtm_rm_stpw_original, file_name = "stopword-original")
 
 # Trial and error of original stop words---------------------------------------
 # K = 30でチェックしてみる。
 
-token_rm_stpw_original <- read_csv("data/tokens-05_rm-stpw-general.csv")
+token_rm_stpw_original <- read_csv("data/token-05-general-stopword-removed.csv")
 stopword_noun_original <- 
-  read_excel("data-manual/token-rm-stpw-checked.xlsx", sheet = 1)
+  read_excel("data-manual/token-stopword-selected.xlsx", sheet = 1)
 stopword_noun_original %<>% filter(!(is.na(judge)))
 stopword_noun_original %>% 
   group_by(judge, sub) %>% 
@@ -114,7 +119,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-I")
+           file_name = "stopword-original-I")
 
 ## Pattern II: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -127,7 +132,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-II")
+           file_name = "stopword-original-II")
 
 ## Pattern III: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -143,7 +148,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-III")
+           file_name = "stopword-original-III")
 
 ## Pattern IV: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -160,7 +165,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-IV")
+           file_name = "stopword-original-IV")
 
 ## Pattern V: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -177,7 +182,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-V")
+           file_name = "stopword-original-V")
 
 ## Pattern VI: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -195,7 +200,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VI")
+           file_name = "stopword-original-VI")
 
 ## Pattern VII: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -211,7 +216,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VII")
+           file_name = "stopword-original-VII")
 
 ## Pattern VIII: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -227,7 +232,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VIII")
+           file_name = "stopword-original-VIII")
 
 ## Pattern VIX: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -244,7 +249,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VIX")
+           file_name = "stopword-original-VIX")
 
 ## Pattern VX: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -262,7 +267,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VX")
+           file_name = "stopword-original-VX")
 
 ## Pattern VXI: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -278,7 +283,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VXI")
+           file_name = "stopword-original-VXI")
 
 ## Pattern VXII: 
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -295,7 +300,7 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VXII")
+           file_name = "stopword-original-VXII")
 
 ## Pattern VXIII: 決定！
 dtm_rm_stpw_original <- token_rm_stpw_original %>% 
@@ -313,4 +318,4 @@ dtm_rm_stpw_original <- token_rm_stpw_original %>%
   makeDTMatrix()
 
 runLDAtest(dtm_rm_stpw_original, K_from = 30, K_to = 30, K_by = 30,
-           file_name = "TP-list-rm-stpw-original-VXIII")
+           file_name = "stopword-original-VXIII")

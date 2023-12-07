@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------#
-# Script Name: 08-token-cut.R                                                 #
+# Script Name: 08-token-thinning.R                                            #
 #                                                                             #
 # Author: Daiki Tomojiri                                                      #
 # Email: tomojiri.daiki@gmail.com                                             #
@@ -19,13 +19,13 @@ pacman::p_load(tidyverse,
                )
 
 # Data
-token_cutting <- read_csv("data/tokens-02_cleansed.csv")
+token_thinning <- read_csv("data-proc/tokens-02-cleaned.csv")
 
 # 出現頻度による単語の除外 ----------------------------------------------------
 
 # 出現頻度のチェック
-N_doc <- length(unique(token_cutting$id_cleansed))
-tokens_summary_check <- token_cutting %>% 
+N_doc <- length(unique(token_thinning$id_cleansed))
+tokens_summary_check <- token_thinning %>% 
   group_by(term) %>% 
   summarise(n = n(), freq = n / N_doc * 100) %>% 
   as.data.frame()
@@ -49,7 +49,7 @@ arrange(filter(tokens_summary_check, freq < 0.0008), desc(freq))
 arrange(filter(tokens_summary_check, freq < 0.0009), desc(freq))
 
 # 出現頻度の低い単語を除外する（n < 5）。
-token_cutting %<>% 
+token_thinning %<>% 
   anti_join(tokens_summary_check %>% 
               # filter(freq > 15 | freq < 0.001) %>% 
               filter(freq > 10 | freq < 0.01) %>% 
@@ -57,4 +57,4 @@ token_cutting %<>%
             by = "term")
 
 # 前処理が完了したデータの書き出し
-write_csv(token_cutting, "data/tokens-03_cut.csv")
+write_csv(token_thinning, "data-proc/token-03-thinned.csv")
