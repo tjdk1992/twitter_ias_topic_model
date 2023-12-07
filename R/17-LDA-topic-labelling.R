@@ -55,14 +55,12 @@ label_topic <- data.frame(
 
 # Top 20 terms in Japanese for Supplementary materials
 (topic_term_top20 <- head(topic_term, 20))
-topic_term_top25_A <- topic_term_top25[, 1:13]
-topic_term_top25_B <- topic_term_top25[, 14:25]
+topic_term_top20_A <- topic_term_top20[, 1:13]
+topic_term_top20_B <- topic_term_top20[, 14:25]
 
 # Write as tex format
-print(xtable(topic_term_top25_a), include.rownames = FALSE,
-      file = "table-suppl/table-top25-term-TP01-TP13.tex")
-print(xtable(topic_term_top25_b), include.rownames = FALSE,
-      file = "table-suppl/table-top25-term-TP14-TP25.tex")
+writexl::write_xlsx(topic_term_top20_A, "table-supp/table-top25-A-unformatted.xlsx")
+writexl::write_xlsx(topic_term_top20_B, "table-supp/table-top25-B-unformatted.xlsx")
 
 # Write table for English translation
 topic_term %>% 

@@ -21,7 +21,7 @@ pacman::p_load(tidyverse,
                rstatix,
                glue,
                ggtext
-               )
+)
 
 # Data
 tweet_finalized <- read_csv("data/tweet-finalized.csv")
@@ -33,9 +33,9 @@ pal_orig <- pals::cols25(7)[c(5, 4, 7, 2, 1, 6, 3)]
 # Temporal trends ---------------------------------------------------------------
 
 NIS_all$group_biol <- factor(NIS_all$group_biol, 
-                                levels = c("mammal", "bird", "reptile", 
-                                           "amphibian", "fish", 
-                                           "invertebrate", "plant"))
+                             levels = c("mammal", "bird", "reptile", 
+                                        "amphibian", "fish", 
+                                        "invertebrate", "plant"))
 
 # Check the annual trends of the occurrence
 tweet_finalized %>% 
@@ -99,6 +99,26 @@ tweet_count <- left_join(tweet_count, NIS_all, by = "name_sp")
 
 # Write data
 write_csv(tweet_count, "data/NIS-count.csv")
+
+# Write table
+tweet_count %>% 
+  arrange(name_sp) %>% 
+  arrange(desc(total)) %>% 
+  arrange(group_biol) %>% 
+  transmute(
+    `Scientific name` = name_sp,
+    `Japanese name`   = str_replace_all(name_ja, c("[[:punct:]]" = "",
+                                                   "[[:digit:]]" = "",
+                                                   "[[:lower:]]" = "",
+                                                   "[[:upper:]]" = "",
+                                                   "[[:space:]]" = "")),
+    Total             = round(total, 2),
+    Mean              = round(mean, 2),
+    SD                = round(sd, 2),
+    Maximun           = round(max, 2),
+    Minimun           = round(min, 2)
+  ) %>% 
+  writexl::write_xlsx("table-supp/table-NIS-summary-unformatted.xlsx")
 
 # Summarizing unfiltered values ------------------------------------------------------
 
@@ -184,9 +204,9 @@ write_csv(NIS_popular, "data/NIS-popular.csv")
 # Visualization ---------------------------------------------------------------
 
 NIS_popular$group_biol <- factor(NIS_popular$group_biol, 
-                                   levels = c("mammal", "bird", "reptile", 
-                                              "amphibian", "fish", 
-                                              "invertebrate", "plant"))
+                                 levels = c("mammal", "bird", "reptile", 
+                                            "amphibian", "fish", 
+                                            "invertebrate", "plant"))
 
 # Plot bargraph for all species
 NIS_popular %>% 
@@ -256,14 +276,14 @@ for (i in 1:length(l_biol)) {
 
 # Layout and save the visualized result
 ((vis_n_tweet[[1]] | vis_n_tweet[[2]]) /
-  (vis_n_tweet[[3]] | vis_n_tweet[[4]])) & theme(legend.position = 'none')
+    (vis_n_tweet[[3]] | vis_n_tweet[[4]])) & theme(legend.position = 'none')
 ggsave("fig-supp/barplot_ias-tweet-count_A.png",
        units = "mm", width = 170, height = 200)
 ggsave("fig-supp/barplot_ias-tweet-count_A.eps",
        units = "mm", width = 170, height = 200, device = cairo_ps)
 
 ((vis_n_tweet[[5]] | vis_n_tweet[[6]]) / 
-  vis_n_tweet[[7]]) & theme(legend.position = 'none')
+    vis_n_tweet[[7]]) & theme(legend.position = 'none')
 ggsave("fig-supp/barplot_ias-tweet-count_B.png",
        units = "mm", width = 170, height = 200)
 ggsave("fig-supp/barplot_ias-tweet-count_B.eps",
