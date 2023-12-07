@@ -9,30 +9,6 @@
 ## Abstract
 Invasion culturomics is an emerging field of study that utilizes digital data existing on the Internet to reveal the human dimension of nonindigenous species (NIS) invasions. Although hypothetical approaches have been used to examine explanatory variables that predict the amount of public attention by using proxies, it has been difficult to observe direct associations between these variables. Here, we aimed to deepen our understanding of the relationship between people and NIS by analyzing the content of texts about NIS on social media, and by clarifying the context and aspects to which public attention is directed. Specifically, we quantified tweets about NIS to identify popular NIS that attract a lot of public attention on Twitter. We also identified hidden topics in which NIS names occurred by applying topic modeling to tweets, and we investigated the topic distribution over popular NIS. A relatively small number of species were selected as popular NIS for further analysis, and 25 hidden topics were identified from all the tweets used in the analysis. The topic distribution over popular NIS had three patterns across taxonomic groups: (1) biased among topics but consistent within taxonomic groups; (2) relatively even among topics and consistent within taxonomic groups; and (3) not consistent within taxonomic groups and with biases differing among species. These findings can provide important insights into the formulation of a better strategy for NIS management by approaching the social and human dimensions of NIS invasion; such a strategy would include information dissemination, environmental education, and management campaigns. Our methodological framework can be used to address other important environmental topics that are attracting public attention and in which the objects have similar compositions (e.g., species of disease pathogens or types of marine debris).
 
-## Contents of the Repository
-
-| Dir | Type | File Name | Description |
-|:---|:---|:---|:---|
-|R  |R script |01-nis-list-compilation.R  |Script for organizing data on NIS copied from NIES website (https://www.nies.go.jp/biodiversity/invasive/) |
-|R  |R script |02-tweet-collection.R      |Script for retrieving Tweets data through Twitter academic API by using get_all_tweets function from the academictwitteR package of R. |
-|R  |R script |03-tweet-filtering.R       |Script to automatically exclude unnecessary tweets such as retweets. |
-|R  |R script |04-tweet-screening.R       |Script to further narrow the scope of the search query and limit the tweets to those that matched the following two combinations: "nonindigenous", "introduced", or "naturalized" and NIS common names. |
-|R  |R script |05-tweet-cleansing.R       |Script to manually remove irrelevant terms such as media names. |
-|R  |R script |06-tweet-tokenization.R    |Script for morphological analysis of text in the tweet. |
-|R  |R script |07-token-cleansing.R       |Script for XXXX |
-|R  |R script |08-token-cutting.R         |Script to exclude tweets with an extremely low (less than 0.001% of all tweets) or high (more than 15% of all tweets) frequency of occurrence among all tweets. |
-|R  |R script |09-stopword-basic.R        |Script to remove stop words by using the list of slothlib which is open for public. |
-|R  |R script |10-stopword-general.R      |Script to remove stop words which automatically and manually selected from a corpus created by newly retrieved general tweets. |
-|R  |R script |11-stopword-original.R     |Script to remove original stop words which manually selected from the corpus created from the tweets related to NIS. |
-|R  |R script |12-lda-trial-examination.R |This script is used any steps through the data preprocessing to check the validation of the LDA results. |
-|R  |R script |13-lda-tuning-automatic.R  |Script for examining the range of the appropriate number of topics, K, by checking three indexes.  |
-|R  |R script |14-lda-tuning-manual.R     |Script for examining and determine the appropriate number of topics, K, by checking the results of LDA. |
-|R  |R script |15-lda-model-inference.R   |Script to implement LDA inference by setting finally fixed K. |
-|R  |R script |16-lda-topic-overview.R    |Script for examining the overview of identified topics and their characteristics. |
-|R  |R script |17-tweet-ias-occurrence.R  |Script for summarize and visualize the number of NIS in the tweets. |
-|R  |R script |18-count-topic-assoc.R     |Script for comprehensively assessing the association between the number of NIS and topic distribution over the NISs. |
-|R  |R script |19-topic-dissimilarity.R   |Script for examining the dissimilarity among taxon. |
-
 ## Session Information
 ```
 ─ Session info ─
