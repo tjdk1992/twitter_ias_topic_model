@@ -1,7 +1,4 @@
 # Aspects of public attention on popular nonindigenous species, as determined by a comprehensive assessment of Japanese social media
-====
-
-Overview
 
 **Author**: Daiki Tomojiri & Kosuke Takaya (2023)
 
@@ -157,4 +154,3 @@ Invasion culturomics is an emerging field of study that utilizes digital data ex
  xml2                1.3.5   2023-07-06 [1] CRAN (R 4.3.0)
  xtable              1.8-4   2019-04-21 [1] CRAN (R 4.3.0)
  ```
-
