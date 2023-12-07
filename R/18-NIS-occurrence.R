@@ -112,12 +112,9 @@ tweet_count %>%
                                                    "[[:lower:]]" = "",
                                                    "[[:upper:]]" = "",
                                                    "[[:space:]]" = "")),
-    Total             = round(total, 2),
-    Mean              = round(mean, 2),
-    SD                = round(sd, 2),
-    Maximun           = round(max, 2),
-    Minimun           = round(min, 2)
-  ) %>% 
+    Taxon             = str_to_title(group_biol),
+    Total             = round(total, 2)
+    ) %>% 
   writexl::write_xlsx("table-supp/table-NIS-summary-unformatted.xlsx")
 
 # Summarizing unfiltered values ------------------------------------------------------
