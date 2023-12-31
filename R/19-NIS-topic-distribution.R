@@ -81,6 +81,10 @@ NIS_topic %>%
 
 # Topic distribution over NISs ------------------------------------------------
 
+# Rename column
+
+NIS_topic <- mutate(NIS_topic, `Biological group` = str_to_title(group_biol))
+
 g_bubble_topic <- NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
@@ -105,7 +109,7 @@ g_bubble_topic <- NIS_topic %>%
                values_to = "value") %>% 
   ggplot(aes(x = topic, y = reorder(name_show, id_reorder), label = group_biol)) +
   geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
-  scale_color_manual(values = pal_orig[1:5]) + # cols25かalphabet2のどちらかが良さそう。
+  scale_color_manual(values = pal_orig[1:5], name = "Biological group") + # cols25かalphabet2のどちらかが良さそう。
   scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
   scale_x_discrete(position = "top") +
   labs(x = "", y = "") +
@@ -147,6 +151,7 @@ g_bar_rank <- NIS_topic %>%
               axis_title_size = 10,
               axis_title_just = "mc") + 
   theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 60),
         axis.title.y = element_blank(),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
   coord_flip()
@@ -167,13 +172,14 @@ g_bubble_topic <- NIS_topic %>%
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
   ungroup() %>% 
-  mutate(name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
+  mutate(group_biol = str_to_title(group_biol),
+         name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
          name_block = if_else(str_detect(name_sp, "subspp."), "subsp.",
                               if_else(str_detect(name_sp, "spp."), "spp.", "")),
          name_block = str_replace_all(name_block, "subsp.", "subspp."),
          name_show = glue("<i>{name_italic}</i> {name_block}")) %>% 
-  filter(group_biol == "invertebrate" | 
-           group_biol == "plant") %>% 
+  filter(group_biol == "Invertebrate" | 
+           group_biol == "Plant") %>% 
   arrange(total) %>% 
   arrange(desc(group_biol)) %>% 
   mutate(id_reorder = row_number()) %>% 
@@ -182,7 +188,7 @@ g_bubble_topic <- NIS_topic %>%
                values_to = "value") %>% 
   ggplot(aes(x = topic, y = reorder(name_show, id_reorder), label = group_biol)) +
   geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
-  scale_color_manual(values = pal_orig[6:7]) + # cols25かalphabet2のどちらかが良さそう。
+  scale_color_manual(values = pal_orig[6:7], name = "Biological group") + # cols25かalphabet2のどちらかが良さそう。
   scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
   scale_x_discrete(position = "top") +
   labs(x = "", y = "") +
@@ -214,13 +220,14 @@ g_bar_rank <- NIS_topic %>%
                 hjust = -0.2), size = 3) +
   scale_fill_manual(values = pal_orig[6:7]) + # cols25かalphabet2のどちらかが良さそう。
   labs(x = "Species", 
-       y = "No. of tweets") +
+       y = "NIS name frequency") +
   theme_ipsum(base_family = "Helvetica", 
               base_size = 8, 
               axis_text_size = 8,
               axis_title_size = 10,
               axis_title_just = "mc") + 
   theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 60),
         axis.title.y = element_blank(),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
   coord_flip()
@@ -237,12 +244,14 @@ ggsave("fig-supp/bubble-biol-ordered-category_B.eps",
        units = "mm", width = 170, height = 230, device = cairo_ps)
 
 # ひとまとめ ------------------------------------------------------------------
+
 NIS_topic %>% 
   arrange(desc(total)) %>% 
   group_by(group_biol) %>% 
   mutate(rank_group = row_number()) %>% 
   ungroup() %>% 
-  mutate(name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
+  mutate(group_biol = str_to_title(group_biol),
+         name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
          name_block = if_else(str_detect(name_sp, "subspp."), "subsp.",
                               if_else(str_detect(name_sp, "spp."), "spp.", "")),
          name_block = str_replace_all(name_block, "subsp.", "subspp."),
@@ -253,19 +262,19 @@ NIS_topic %>%
   mutate(id_reorder = row_number()) %>% 
   pivot_longer(cols = TP01:TP25, 
                names_to = "topic", 
-               values_to = "value") %>% 
+               values_to = "Frequency") %>% 
   ggplot(aes(x = topic, y = reorder(name_show, id_reorder), label = group_biol)) +
-  geom_point(aes(size = value, color = group_biol), alpha = 0.7) +
-  scale_color_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  geom_point(aes(size = Frequency, color = group_biol), alpha = 0.7) +
+  scale_color_manual(values = pal_orig, name = "Biological group") + # cols25かalphabet2のどちらかが良さそう。
   scale_size(range = c(0.05, 10)) +  # Adjust the range of points size
   scale_x_discrete(position = "top") +
   labs(x = "", y = "") +
   theme_ipsum(base_family = "Helvetica",
               base_size = 8) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        axis.text.y = element_markdown(),
-        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
-        legend.title = element_blank())
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8),
+        axis.text.y = element_markdown(size = 8),
+        axis.title = element_text(size = 8),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"))
 
 # Save the visualized result
 ggsave("fig/bubble-biol-ordered-category.png",

@@ -90,6 +90,7 @@ tweet_count <- tweet_finalized %>%
 
 # カタカナ名による重複を除外しておく
 glimpse(NIS_all)
+
 NIS_all <- NIS_all %>% 
   dplyr::select(group_biol, name_ja, name_sp, reg1, reg2) %>% 
   distinct(.keep_all = TRUE)
@@ -101,11 +102,18 @@ tweet_count <- left_join(tweet_count, NIS_all, by = "name_sp")
 write_csv(tweet_count, "data/NIS-count.csv")
 
 # Write table
+NIS_zero <- NIS_all %>% 
+  dplyr::select(name_ja, name_sp, group_biol) %>% 
+  anti_join(dplyr::select(tweet_count, name_sp), by = "name_sp")
+
 tweet_count %>% 
+  bind_rows(NIS_zero) %>% 
+  mutate(total = replace_na(total, 0)) %>% 
   arrange(name_sp) %>% 
   arrange(desc(total)) %>% 
   arrange(group_biol) %>% 
   transmute(
+    `No.` = row_number(),
     `Scientific name` = name_sp,
     `Japanese name`   = str_replace_all(name_ja, c("[[:punct:]]" = "",
                                                    "[[:digit:]]" = "",
@@ -205,41 +213,50 @@ NIS_popular$group_biol <- factor(NIS_popular$group_biol,
                                             "amphibian", "fish", 
                                             "invertebrate", "plant"))
 
+# Top NIS
+NIS_top <- NIS_popular %>% 
+  arrange(desc(total)) %>% 
+  group_by(group_biol) %>% 
+  mutate(rank = row_number()) %>% 
+  ungroup() %>% 
+  filter(rank == 1) %>% 
+  transmute(name_sp, name_top = "top")
+
 # Plot bargraph for all species
 NIS_popular %>% 
   arrange(desc(total)) %>% 
   head(50) %>% 
+  left_join(NIS_top, by = "name_sp") %>% 
   mutate(group_biol = str_to_title(group_biol),
+         name_sp = if_else(is.na(name_top), name_sp, str_c(name_sp, "*")),
          name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
          name_block = if_else(str_detect(name_sp, "subspp."), "subsp.",
                               if_else(str_detect(name_sp, "spp."), "spp.", "")),
          name_block = str_replace_all(name_block, "subsp.", "subspp."),
          name_show = glue("<i>{name_italic}</i> {name_block}")) %>% 
-  ggplot(aes(x = reorder(name_show, desc(total)), y = total)) +
+  ggplot(aes(x = reorder(name_show, total), y = total)) +
   geom_bar(aes(fill = group_biol), stat = "identity") +
-  scale_fill_manual(values = pal_orig) + # cols25かalphabet2のどちらかが良さそう。
+  scale_fill_manual(values = pal_orig, name = "Biological group") + # cols25かalphabet2のどちらかが良さそう。
+  coord_flip() +
   labs(x = "Species", 
-       y = "No. of tweets") +
-  theme_ipsum(base_size = 10,
-              axis_title_size = 10,
-              strip_text_size = 10,
-              axis_text_size = 8,
-              axis_title_just = "center",
+       y = "Frequency of NIS name") +
+  theme_ipsum(axis_title_just = "center",
               base_family = "Helvetica",
               plot_margin = margin(5, 5, 5, 5)) + 
-  theme(axis.text.x = element_markdown(angle = 90, hjust = 1),
-        legend.position = "right",
+  theme(axis.text.y = element_markdown(hjust = 1, size = 8),
+        axis.text.x = element_text(size = 8),
+        axis.title = element_text(size = 8),
+        legend.position = "bottom",
         legend.box.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
         legend.key.size = unit(5, 'mm'),
-        legend.title = element_blank(),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm")) +
   labs(x = "")
 
 # Save the visualized result
 ggsave("fig/barplot_top-occurred-ias.png",
-       units = "mm", width = 190, height = 120)
+       units = "mm", width = 119, height = 140)
 ggsave("fig/barplot_top-occurred-ias.eps",
-       units = "mm", width = 190, height = 120, device = cairo_ps)
+       units = "mm", width = 119, height = 140, device = cairo_ps)
 
 # Plot bargraph of occurrence separated by biological groups
 l_biol <- c("mammal", "bird", "reptile", "amphibian", 
@@ -250,7 +267,13 @@ for (i in 1:length(l_biol)) {
   biol <- l_biol[i]
   vis_n_tweet[[i]] <- tweet_count %>% 
     filter(total >= 100 & group_biol == biol) %>% 
-    ggplot(aes(x = reorder(name_sp, desc(total)), y = total)) +
+    mutate(group_biol = str_to_title(group_biol),
+           name_italic = str_remove_all(name_sp, c(" subspp." = "", " spp." = "")),
+           name_block = if_else(str_detect(name_sp, "subspp."), "subsp.",
+                                if_else(str_detect(name_sp, "spp."), "spp.", "")),
+           name_block = str_replace_all(name_block, "subsp.", "subspp."),
+           name_show = glue("<i>{name_italic}</i> {name_block}")) %>% 
+    ggplot(aes(x = reorder(name_show, desc(total)), y = total)) +
     geom_bar(aes(fill = group_biol), stat = "identity") +
     scale_fill_manual(values = pal_orig[i]) + # cols25かalphabet2のどちらかが良さそう。
     labs(x = "Species", 
@@ -262,7 +285,7 @@ for (i in 1:length(l_biol)) {
                 axis_title_just = "center",
                 base_family = "Helvetica",
                 plot_margin = margin(5, 5, 5, 5)) + 
-    theme(axis.text.x = element_text(angle = 60, hjust = 1, face = "italic"), 
+    theme(axis.text.x = element_markdown(angle = 60, hjust = 1),
           legend.position = "right",
           legend.box.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
           legend.key.size = unit(5, 'mm'),

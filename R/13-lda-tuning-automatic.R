@@ -82,7 +82,7 @@ res_ldatuning %>%
     scale_x_continuous(breaks = seq(0, 300, 10)) +
     facet_grid(group ~ .) +
     scale_color_manual(values=as.vector(cols25(4))) +
-    labs(x = "Metrics values", y = "The number of topics (K)") +
+    labs(x = "The number of topics (K)", y = "Metric score") +
   theme_ipsum(base_size = 10,
               axis_title_size = 10,
               strip_text_size = 10,

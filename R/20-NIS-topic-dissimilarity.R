@@ -93,7 +93,6 @@ df_bray_sp %>%
   ggplot() +
   geom_boxplot(aes(x = group_biol, y = value, fill = group_biol), 
                show.legend = FALSE) +
-  coord_flip() +
   # geom_jitter(aes(x = group_biol, y = value), width = 0.3, alpha = 0.3) +
   scale_x_discrete(labels = pull(transmute(
     n_ias_group, n_group_biol = str_c(group_biol, "\n(", n, ")")))) +
@@ -114,9 +113,9 @@ df_bray_sp %>%
 
 # Save the visualized result
 ggsave("fig/boxplot_sp-pairwise-topic-dissimilarity.png",
-       units = "mm", width = 90, height = 90)
+       units = "mm", width = 120, height = 70)
 ggsave("fig/boxplot_sp-pairwise-topic-dissimilarity.eps",
-       units = "mm", width = 90, height = 90, device = cairo_ps)
+       units = "mm", width = 120, height = 70, device = cairo_ps)
 
 # Distribution of dissimilarlity
 df_bray_sp %>% 
@@ -125,13 +124,13 @@ df_bray_sp %>%
   facet_wrap(. ~ group_biol)
 
 # Multiple comparison by Kruskal-Wallis method
-(res.kruskal <- kruskal_test(df_bray_sp, value ~ group_biol))
+# (res.kruskal <- kruskal_test(df_bray_sp, value ~ group_biol))
 (res_anova <- anova_test(df_bray_sp, value ~ group_biol))
 summary(res_anova)
 # Multiple pairwise-comparisons
-df_bray_sp %>% 
-  dunn_test(value ~ group_biol, p.adjust.method = "bonferroni") %>% 
-  as.data.frame()
+# df_bray_sp %>% 
+#   dunn_test(value ~ group_biol, p.adjust.method = "bonferroni") %>% 
+#   as.data.frame()
 res_anova <- aov(value ~ group_biol, data = df_bray_sp) %>% 
   tukey_hsd() %>% 
   as.data.frame()
@@ -169,7 +168,7 @@ for (i in 1:length(l_biol)) {
     # geom_point(aes(x = conf.low, y = comb), colour = "blue") +
     # geom_point(aes(x = conf.high, y = comb), colour = "red") +
     geom_vline(xintercept = 0, linetype="dotted", 
-               color = "black", size = 0.5) +
+               color = "black", linewidth = 0.5) +
     theme_ipsum(base_size = 10,
                 axis_title_size = 10,
                 strip_text_size = 10,
